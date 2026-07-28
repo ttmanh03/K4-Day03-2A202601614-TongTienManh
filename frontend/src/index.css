@@ -1,0 +1,24 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html,
+  body {
+    margin: 0;
+    padding: 0;
+  }
+
+  body {
+    @apply bg-background text-on-surface font-sans;
+    overscroll-behavior: none;
+  }
+
+  #root {
+    min-height: 100svh;
+  }
+}
+
+::-webkit-scrollbar {
+  display: none;
+}
