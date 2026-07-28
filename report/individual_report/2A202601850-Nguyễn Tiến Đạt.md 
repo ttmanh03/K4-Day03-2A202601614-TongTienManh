@@ -1,0 +1,112 @@
+# Individual Report: Lab 3 – Chatbot vs ReAct Agent
+
+**Student Name:** Nguyen Tien Dat
+**Student ID:** 2A202601850
+**Project Role:** Role 2 – Tool Engineer
+**Date:** July 28, 2026
+
+
+
+# I. Technical Contribution
+
+## Main Tasks and Implemented Modules
+
+My primary responsibility was to design, develop, and optimize all execution tools within the **tools** module to support the execution workflow of the ReAct Agent.
+
+The completed tasks include:
+
+1. Built core execution functions, including the zodiac compatibility tool for computing zodiac compatibility scores, the MBTI matching tool for analyzing relationship dynamics, and the date suggestion tool for generating location recommendations.
+2. Authored detailed docstrings for each function, clearly explaining the tool's purpose, input parameter formats, and output structure so that the LLM can interpret and trigger tools accurately.
+3. Registered all newly created functions in the available tools dictionary to allow the ReAct Agent orchestration module to access and invoke them dynamically.
+4. Implemented defensive programming within the tools module using exception handling and input validation routines. This ensures that when invalid inputs are encountered (such as fictitious zodiac signs in Test Case 5), the tool gracefully returns an error message as text rather than crashing the system.
+
+## Code Highlight
+
+```python
+# Code snippet defining and registering tools
+def calculate_zodiac_compatibility(zodiac_1: str, zodiac_2: str) -> str:
+    """
+    Calculate compatibility between two zodiac signs.
+
+    Args:
+        zodiac_1 (str): First zodiac sign name (e.g., Aquarius, Libra).
+        zodiac_2 (str): Second zodiac sign name.
+
+    Returns:
+        str: JSON string containing score and description.
+    """
+    try:
+        z1 = zodiac_1.strip().title()
+        z2 = zodiac_2.strip().title()
+
+        if z1 not in ZODIAC_DATA or z2 not in ZODIAC_DATA:
+            return f"Error: Zodiac sign '{zodiac_1}' or '{zodiac_2}' does not exist in the database."
+
+        score = ZODIAC_DATA[z1].get(z2, 50)
+        return json.dumps({"score": score, "status": "success"})
+
+    except Exception as e:
+        return f"Tool execution error: {str(e)}"
+
+# Register tools for Agent access
+AVAILABLE_TOOLS = {
+    "calculate_zodiac_compatibility": calculate_zodiac_compatibility,
+    "analyze_mbti_match": analyze_mbti_match,
+    "suggest_date_ideas": suggest_date_ideas
+}
+```
+
+## Workflow Explanation
+
+The LLM relies on the docstrings of functions in the **tools** module to determine which tool should be invoked. When the LLM outputs an action requesting a specific tool, the core agent execution layer retrieves the corresponding function from the available tools registry and executes it. The returned output, either as plain text or JSON, is then passed back to the LLM as an **Observation**, allowing the reasoning process to continue.
+
+
+
+# II. Debugging Case Study
+
+## Problem Description
+
+During testing with **Test Case 5**, the user submitted non-existent zodiac signs such as **"Thiên Mã"** and **"Cự Giải"**. Initially, because the tools module lacked proper input validation, the function raised an unhandled **KeyError**, causing the entire application to crash unexpectedly and forcing the Agent into an error-calling loop.
+
+## Diagnosis
+
+1. **Missing Input Parameter Verification:** The tool handler accessed dictionary keys directly without verifying whether the keys existed in the system data.
+2. **Missing Exception Handling:** When errors occurred within the Tool Engineer's Python code, they were not wrapped into standard text responses, causing uncaught exceptions to crash the runtime environment.
+
+## Solution
+
+1. Added explicit parameter checks at the beginning of each tool function in the tools module.
+2. Wrapped the execution logic of each tool inside a `try-except` block. If an error occurs, the function catches it and returns a safe error string, such as an invalid sign message.
+3. Formatted output results into clean text strings so the LLM can interpret the error during the **Observation** step and formulate a polite refusal answer for the user.
+
+
+
+# III. Personal Insights: Chatbot vs. ReAct
+
+## 1. Reasoning Capability
+
+The **Thought** block in ReAct helps the Agent recognize when external tools should be invoked instead of guessing answers. Standard chatbots lack access to such tools and are therefore more susceptible to hallucination when asked for exact scores or factual information. Providing well-defined tools grounds the Agent's reasoning process in real data.
+
+## 2. Reliability
+
+A ReAct Agent performs poorly when function docstrings are vague or when parameters are overly complex, causing the LLM to generate incorrect argument formats. In these situations, repeatedly invoking failing tools increases latency, consumes unnecessary tokens, and introduces parsing failures compared with direct chatbot responses.
+
+## 3. Observation and Environment Feedback
+
+Tool execution outputs serve as ground truth from the environment. When a tool catches an input error and returns an error message, the LLM processes this feedback during the subsequent **Thought** step and adjusts its strategy rather than repeating incorrect information.
+
+
+
+# IV. Future Improvements
+
+## Scalability
+
+Utilize **Pydantic** to standardize and validate argument schemas for all functions in the tools module instead of relying on manual condition checking, making it easier to integrate dozens of new tools.
+
+## Safety
+
+Implement rate limiting and fine-grained permission controls for individual tools. Read-only lookup tools can operate freely, whereas actions with system side effects should require explicit user confirmation.
+
+## Performance
+
+Add caching mechanisms for static lookup functions inside the tools module. When users submit identical MBTI or Zodiac queries, the tool can immediately return cached responses from memory without recomputation.
