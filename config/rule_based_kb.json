@@ -1,0 +1,106 @@
+{
+  "_metadata": {
+    "name": "Knowledge Base cho Cấp độ 1 — Rule-Based Bot",
+    "note": "Bot khớp từ khóa if/else, KHÔNG dùng LLM, KHÔNG gọi tool. Luật xét theo thứ tự từ trên xuống, luật nào khớp trước thì trả lời luật đó. Không khớp luật nào thì rơi vào 'fallback'.",
+    "version": "1.0.0"
+  },
+
+  "rules": [
+    {
+      "id": "greeting",
+      "keywords": ["xin chào", "chào bạn", "chào", "hello", "hi ", "helo", "alo"],
+      "response": "Xin chào! Mình là Cupid. Bạn muốn tìm hiểu điều gì về chuyện tình cảm?"
+    },
+    {
+      "id": "thanks",
+      "keywords": ["cảm ơn", "cám ơn", "thank"],
+      "response": "Không có gì! Chúc bạn sớm tìm được người phù hợp nhé."
+    },
+    {
+      "id": "bot_identity",
+      "keywords": ["bạn là ai", "bạn là gì", "giới thiệu về bạn", "tên bạn là"],
+      "response": "Mình là Cupid — trợ lý tư vấn ghép đôi và độ tương thích."
+    },
+    {
+      "id": "zodiac",
+      "keywords": ["cung hoàng đạo", "hoàng đạo", "bạch dương", "kim ngưu", "song tử", "cự giải", "sư tử", "xử nữ", "thiên bình", "bọ cạp", "nhân mã", "ma kết", "bảo bình", "song ngư"],
+      "response": "Cung hoàng đạo được chia theo 4 nhóm nguyên tố: Lửa (Bạch Dương, Sư Tử, Nhân Mã), Đất (Kim Ngưu, Xử Nữ, Ma Kết), Khí (Song Tử, Thiên Bình, Bảo Bình), Nước (Cự Giải, Bọ Cạp, Song Ngư). Các cung cùng nhóm nguyên tố thường dễ hiểu nhau hơn."
+    },
+    {
+      "id": "mbti",
+      "keywords": ["mbti", "tính cách", "intj", "enfp", "infj", "entp", "istj", "esfp", "intp", "esfj", "entj", "isfj", "infp", "estp", "estj", "isfp", "enfj", "istp"],
+      "response": "MBTI gồm 16 nhóm tính cách, dựa trên 4 cặp đối lập: Hướng ngoại/Hướng nội (E/I), Giác quan/Trực giác (S/N), Lý trí/Cảm xúc (T/F), Nguyên tắc/Linh hoạt (J/P)."
+    },
+    {
+      "id": "date_ideas",
+      "keywords": ["hẹn hò", "đi chơi", "đi đâu", "date", "quán", "địa điểm"],
+      "response": "Một buổi hẹn hò dễ chịu thường có 3 phần: một chỗ yên tĩnh để trò chuyện (quán cà phê), một bữa ăn, rồi một hoạt động nhẹ nhàng như đi dạo."
+    },
+    {
+      "id": "confession",
+      "keywords": ["tỏ tình", "thổ lộ", "crush", "thích một người", "tán"],
+      "response": "Khi tỏ tình, hãy chọn thời điểm cả hai đều thoải mái, nói thật lòng và ngắn gọn. Quan trọng nhất là tôn trọng câu trả lời của đối phương, dù là gì."
+    },
+    {
+      "id": "breakup",
+      "keywords": ["chia tay", "thất tình", "bị từ chối", "buồn", "tan vỡ"],
+      "response": "Chia tay là chuyện không dễ. Hãy cho bản thân thời gian, giữ liên lạc với bạn bè và đừng vội đánh giá bản thân qua một mối quan hệ."
+    },
+    {
+      "id": "relationship_advice",
+      "keywords": ["mối quan hệ", "yêu xa", "cãi nhau", "giận nhau", "níu kéo", "hàn gắn"],
+      "response": "Một mối quan hệ bền vững cần: tôn trọng lẫn nhau, giao tiếp cởi mở, tin tưởng, và tôn trọng không gian riêng của nhau."
+    },
+    {
+      "id": "compatibility_request",
+      "keywords": ["hợp nhau không", "có hợp", "tương thích", "độ hợp", "phần trăm", "%"],
+      "response": "Sự tương thích giữa hai người phụ thuộc vào giá trị sống, cách giao tiếp và mức độ thấu hiểu nhau. Mình chưa có đủ thông tin để đưa ra một con số cụ thể."
+    },
+    {
+      "id": "contact",
+      "keywords": ["liên hệ", "hotline", "hỗ trợ", "số điện thoại", "email"],
+      "response": "Hotline hỗ trợ: 1900-1234 · Email: support@vinuni.edu.vn"
+    }
+  ],
+
+  "fallback": "Xin lỗi, mình chưa hiểu câu hỏi này. Bạn thử hỏi mình về cung hoàng đạo, MBTI, hoặc gợi ý hẹn hò nhé.",
+
+  "test_cases": [
+    {
+      "id": "L1-1",
+      "question": "Xin chào",
+      "expect_rule": "greeting",
+      "note": "Khớp luật chào hỏi cơ bản."
+    },
+    {
+      "id": "L1-2",
+      "question": "Bảo Bình và Thiên Bình có hợp nhau không?",
+      "expect_rule": "zodiac",
+      "note": "Khớp luật 'zodiac' vì đứng trước 'compatibility_request' trong danh sách. Bot trả kiến thức chung, KHÔNG có số % vì không gọi được tool."
+    },
+    {
+      "id": "L1-3",
+      "question": "Tôi là INTJ thì hợp với ai?",
+      "expect_rule": "mbti",
+      "note": "Khớp từ khóa MBTI nhưng chỉ trả định nghĩa chung, không phân tích được cặp cụ thể."
+    },
+    {
+      "id": "L1-4",
+      "question": "Mình vừa chia tay, buồn quá",
+      "expect_rule": "breakup",
+      "note": "Khớp luật an ủi cố định — luôn trả cùng một câu bất kể hoàn cảnh."
+    },
+    {
+      "id": "L1-5",
+      "question": "Giải thích thuyết tương đối hẹp giúp tôi",
+      "expect_rule": "fallback",
+      "note": "Không khớp luật nào -> bộc lộ giới hạn của Cấp 1."
+    },
+    {
+      "id": "L1-6",
+      "question": "Người ấy sinh ngày 15/03, tôi sinh 20/11, tính giúp điểm tương thích chính xác",
+      "expect_rule": "compatibility_request",
+      "note": "Bot không tính được điểm cụ thể — đây là lý do cần Cấp 3 (ReAct Agent) có tool."
+    }
+  ]
+}

@@ -9,54 +9,51 @@ Hai cấp độ ở đây được viết lại theo đúng domain ghép đôi/t
 """
 
 import json
+import os
 import re
 
-from agent_runner import _call_tool, _parse_action
+from agent_runner import NO_SYSTEM_LEAK, _call_tool, _parse_action, generate_nonempty
 from tools import AVAILABLE_TOOLS
 
 # ---------------------------------------------------------------------------
 # CẤP ĐỘ 1: RULE-BASED BOT (khớp từ khóa if/else, KHÔNG dùng LLM)
 # ---------------------------------------------------------------------------
 
-RULES = [
-    (
-        ("chào", "hello", "hi ", "xin chào"),
-        "Xin chào! Tôi là Cupid Rule-Based Bot (Cấp độ 1). Tôi chỉ biết khớp từ khóa cố định thôi!",
-    ),
-    (
-        ("cung hoàng đạo", "bảo bình", "thiên bình", "kim ngưu", "sư tử", "xử nữ", "bọ cạp"),
-        "Tôi thấy bạn nhắc tới cung hoàng đạo, nhưng tôi là bot luật cố định — tôi không tra cứu "
-        "được bảng tương thích. Hãy thử Cấp độ 3 (ReAct Agent) để tôi gọi tool thật!",
-    ),
-    (
-        ("mbti", "intj", "enfp", "infj", "entp", "istj", "esfp"),
-        "Từ khóa MBTI đã khớp luật! Nhưng tôi chỉ trả lời câu có sẵn: MBTI gồm 16 nhóm tính cách. "
-        "Tôi không phân tích được độ hợp của 2 người cụ thể.",
-    ),
-    (
-        ("hẹn hò", "đi chơi", "date", "quán"),
-        "Gợi ý cố định: đi cà phê, ăn tối, đi dạo. Tôi không cá nhân hóa được theo địa điểm/ngân sách "
-        "vì tôi không có công cụ nào cả.",
-    ),
-    (
-        ("liên hệ", "hotline", "hỗ trợ"),
-        "Hotline hỗ trợ: 1900-1234 · Email: support@vinuni.edu.vn",
-    ),
-]
+_KB_PATH = os.path.join(
+    os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "config", "rule_based_kb.json"
+)
 
-FALLBACK = (
+_DEFAULT_FALLBACK = (
     "Xin lỗi, câu hỏi của bạn nằm ngoài tập luật (keywords) được cài sẵn! "
     "Đây chính là giới hạn lớn nhất của Cấp độ 1: không có luật nào khớp thì bot bó tay."
 )
 
 
+def _load_kb() -> dict:
+    """Đọc knowledge base từ config/rule_based_kb.json (đọc mỗi lần để sửa file là thấy ngay)."""
+    try:
+        with open(_KB_PATH, "r", encoding="utf-8") as f:
+            return json.load(f)
+    except (OSError, json.JSONDecodeError):
+        return {"rules": [], "fallback": _DEFAULT_FALLBACK}
+
+
+def match_rule(user_query: str) -> tuple[str, str]:
+    """
+    Khớp từ khóa theo thứ tự luật trong KB.
+    Trả về (rule_id, response). Không khớp luật nào -> ("fallback", câu fallback).
+    """
+    kb = _load_kb()
+    text = (user_query or "").lower()
+    for rule in kb.get("rules", []):
+        if any(str(k).lower() in text for k in rule.get("keywords", [])):
+            return rule.get("id", "unknown"), rule.get("response", "")
+    return "fallback", kb.get("fallback", _DEFAULT_FALLBACK)
+
+
 def run_rule_based(user_query: str) -> str:
     """Cấp độ 1: chỉ khớp từ khóa, không LLM, không tool. Luôn trả lời tức thì."""
-    text = user_query.lower()
-    for keywords, answer in RULES:
-        if any(k in text for k in keywords):
-            return answer
-    return FALLBACK
+    return match_rule(user_query)[1]
 
 
 # ---------------------------------------------------------------------------
@@ -72,10 +69,24 @@ CÁC TOOL CÓ SẴN:
 2. analyze_mbti_match({"mbti_1": str, "mbti_2": str})
 3. suggest_date_ideas({"location": str, "budget": str, "vibe": str})
 
-Hãy chia mục tiêu của người dùng thành tối đa %d nhiệm vụ con theo thứ tự hợp lý.
+QUAN TRỌNG — khi nào KHÔNG cần lập kế hoạch:
+Nếu người dùng chỉ chào hỏi, tự giới thiệu, cảm ơn, hỏi thông tin đã có trong bộ
+nhớ, hoặc hỏi chuyện phiếm KHÔNG cần dùng tool nào — hãy trả về đúng `[]`.
+Đừng bịa ra nhiệm vụ con cho những câu như vậy.
+
+Ngược lại, chia mục tiêu thành tối đa %d nhiệm vụ con theo thứ tự hợp lý.
 CHỈ trả về JSON array các chuỗi, không giải thích gì thêm. Ví dụ:
 ["Phân tích độ hợp MBTI giữa INTJ và ENFP", "Gợi ý buổi hẹn lãng mạn ở Hà Nội"]
 """ % MAX_SUBTASKS
+
+DIRECT_PROMPT = """Bạn là Cupid — trợ lý tư vấn ghép đôi, đang trò chuyện tự nhiên.
+
+Trả lời ngắn gọn, thân thiện, dùng thông tin trong bộ nhớ nếu có (tên người dùng,
+MBTI, cung hoàng đạo, thành phố...). Nếu người dùng hỏi về chính họ mà bộ nhớ đã
+có thông tin, hãy trả lời dựa vào đó.
+
+Không bịa số liệu tương thích. Không liệt kê danh sách thông tin cần cung cấp trừ
+khi người dùng thực sự yêu cầu phân tích cụ thể."""
 
 EXECUTOR_PROMPT = """Bạn là Cupid Autonomous Agent đang thực hiện MỘT nhiệm vụ con.
 
@@ -116,7 +127,7 @@ def _parse_plan(raw: str) -> list[str]:
     return [ln for ln in lines if ln][:MAX_SUBTASKS]
 
 
-def stream_autonomous_agent(user_query: str, provider):
+def stream_autonomous_agent(user_query: str, provider, context: str = ""):
     """
     Generator yield từng bước của Autonomous Agent (Cấp độ 4).
 
@@ -126,16 +137,39 @@ def stream_autonomous_agent(user_query: str, provider):
     Các loại step: "plan" | "thought" | "action" | "observation" | "memory"
                    | "evaluation" | "final" | "error"
     """
+    ctx_suffix = f"\n\n{context}" if context else ""
+
     # --- 1. PLANNING: agent tự rã mục tiêu ---
     try:
-        raw_plan = provider.generate(f"Mục tiêu của người dùng: {user_query}", system_prompt=PLANNER_PROMPT)
+        raw_plan = provider.generate(
+            f"Mục tiêu của người dùng: {user_query}",
+            system_prompt=PLANNER_PROMPT + ctx_suffix,
+        )
     except Exception as e:
         yield {"type": "error", "step": 1, "content": f"Lỗi khi lập kế hoạch: {e}"}
         return
 
     subtasks = _parse_plan(raw_plan)
+
+    # Câu chào hỏi/hỏi lại thông tin đã nhớ thì không cần rã mục tiêu — trả lời
+    # thẳng, tránh sinh ra kế hoạch vô nghĩa và tốn nhiều lượt gọi LLM.
     if not subtasks:
-        yield {"type": "error", "step": 1, "content": "Không lập được kế hoạch từ mục tiêu này."}
+        yield {
+            "type": "plan",
+            "step": 1,
+            "content": "Câu này không cần dùng tool — trả lời trực tiếp từ bộ nhớ hội thoại.",
+        }
+        answer = generate_nonempty(
+            provider, user_query, DIRECT_PROMPT + NO_SYSTEM_LEAK + ctx_suffix
+        ).strip()
+        if not answer:
+            yield {
+                "type": "error",
+                "step": 2,
+                "content": "Mình chưa nhận được phản hồi từ mô hình. Bạn thử gửi lại câu hỏi nhé.",
+            }
+            return
+        yield {"type": "final", "step": 2, "content": answer}
         return
 
     yield {"type": "plan", "step": 1, "content": "\n".join(f"{i}. {t}" for i, t in enumerate(subtasks, 1))}
@@ -149,14 +183,14 @@ def stream_autonomous_agent(user_query: str, provider):
         step += 1
         yield {"type": "thought", "step": step, "content": f"Nhiệm vụ {idx}/{len(subtasks)}: {task}"}
 
-        context = f"Mục tiêu tổng: {user_query}\nNhiệm vụ con cần làm: {task}\n"
+        task_ctx = f"Mục tiêu tổng: {user_query}\nNhiệm vụ con cần làm: {task}\n"
         if memory:
-            context += "Kết quả các bước trước:\n" + "\n".join(
+            task_ctx += "Kết quả các bước trước:\n" + "\n".join(
                 f"- {m['task']}: {m['result']}" for m in memory
             )
 
         try:
-            llm_output = provider.generate(context, system_prompt=EXECUTOR_PROMPT)
+            llm_output = provider.generate(task_ctx, system_prompt=EXECUTOR_PROMPT + ctx_suffix)
         except Exception as e:
             yield {"type": "error", "step": step, "content": f"Lỗi khi thực thi nhiệm vụ: {e}"}
             return
@@ -183,10 +217,19 @@ def stream_autonomous_agent(user_query: str, provider):
     memory_dump = "\n".join(f"- {m['task']}\n  → {m['result']}" for m in memory)
     eval_context = f"Mục tiêu ban đầu: {user_query}\n\nMemory:\n{memory_dump}"
 
-    try:
-        raw_eval = provider.generate(eval_context, system_prompt=EVALUATOR_PROMPT)
-    except Exception as e:
-        yield {"type": "error", "step": step, "content": f"Lỗi khi tự đánh giá: {e}"}
+    # Bước này viết câu trả lời cuối nên BẮT BUỘC phải có context bộ nhớ,
+    # nếu không agent sẽ quên tên/thông tin người dùng đã nói trước đó.
+    raw_eval = generate_nonempty(
+        provider, eval_context, EVALUATOR_PROMPT + NO_SYSTEM_LEAK + ctx_suffix
+    )
+    if not raw_eval.strip():
+        # Không tổng hợp được thì vẫn trả dữ liệu đã thu thập, không bỏ phí.
+        yield {
+            "type": "final",
+            "step": step,
+            "content": "Kết quả mình tra cứu được:\n\n"
+            + "\n".join(f"• {m['result']}" for m in memory),
+        }
         return
 
     if "Final Answer:" in raw_eval:

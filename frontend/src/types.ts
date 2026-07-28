@@ -54,7 +54,9 @@ export type TraceStep =
   | { type: "thought"; step: number; content: string }
   | { type: "action"; step: number; tool: string; args: Record<string, unknown> }
   | { type: "observation"; step: number; content: string }
+  | { type: "notice"; step: number; content: string }
   | { type: "memory"; step: number; content: string }
+  | { type: "memory_saved"; step: number; content: string }
   | { type: "evaluation"; step: number; content: string }
   | { type: "final"; step: number; content: string }
   | { type: "guardrail"; step: number; content: string }

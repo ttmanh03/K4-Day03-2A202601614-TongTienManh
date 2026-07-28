@@ -1,10 +1,14 @@
 import type { TestCase, TraceStep } from "../types";
 
-export async function fetchPlain(endpoint: string, query: string): Promise<string> {
+export async function fetchPlain(
+  endpoint: string,
+  query: string,
+  sessionId: string,
+): Promise<string> {
   const res = await fetch(endpoint, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ query }),
+    body: JSON.stringify({ query, session_id: sessionId }),
   });
   if (!res.ok) {
     throw new Error(`Request failed: ${res.status}`);
@@ -20,12 +24,13 @@ export async function fetchPlain(endpoint: string, query: string): Promise<strin
 export async function streamSteps(
   endpoint: string,
   query: string,
+  sessionId: string,
   onStep: (step: TraceStep) => void,
 ): Promise<void> {
   const res = await fetch(endpoint, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ query }),
+    body: JSON.stringify({ query, session_id: sessionId }),
   });
   if (!res.ok || !res.body) {
     throw new Error(`Stream request failed: ${res.status}`);
@@ -61,4 +66,16 @@ export async function fetchTestCases(): Promise<TestCase[]> {
   const res = await fetch("/api/test-cases");
   if (!res.ok) throw new Error(`Test-cases request failed: ${res.status}`);
   return res.json();
+}
+
+export async function fetchMemory(
+  sessionId: string,
+): Promise<{ long_term: Record<string, string>; short_term: unknown[] }> {
+  const res = await fetch(`/api/memory/${sessionId}`);
+  if (!res.ok) throw new Error(`Memory request failed: ${res.status}`);
+  return res.json();
+}
+
+export async function clearMemory(sessionId: string): Promise<void> {
+  await fetch(`/api/memory/${sessionId}`, { method: "DELETE" });
 }
