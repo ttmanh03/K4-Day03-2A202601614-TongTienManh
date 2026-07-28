@@ -102,7 +102,9 @@ class DeepSeekProvider(BaseLLMProvider):
     """DeepSeek Provider (API tương thích chuẩn OpenAI, đổi base_url)"""
     def __init__(self, api_key: str = None, model: str = None):
         self.api_key = api_key or os.getenv("DEEPSEEK_API_KEY")
-        self.model_name = model or os.getenv("LLM_MODEL") or "deepseek-chat"
+        # deepseek-chat/deepseek-reasoner (alias cũ) đã bị khai tử từ 24/07/2026.
+        # Model hiện hành: deepseek-v4-flash (nhanh, rẻ) hoặc deepseek-v4-pro (reasoning).
+        self.model_name = model or os.getenv("LLM_MODEL") or "deepseek-v4-flash"
 
     def generate(self, prompt: str, system_prompt: str = "") -> str:
         if not self.api_key or self.api_key == "your_deepseek_api_key_here":
