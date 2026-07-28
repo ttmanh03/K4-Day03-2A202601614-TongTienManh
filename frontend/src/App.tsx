@@ -1,18 +1,20 @@
 import { useEffect, useRef, useState } from "react";
-import { fetchBaseline, fetchTestCases, streamReact } from "./api/streamChat";
+import { fetchPlain, fetchTestCases, streamSteps } from "./api/streamChat";
 import ChatWindow from "./components/ChatWindow";
-import ModeToggle from "./components/ModeToggle";
+import LevelSelector from "./components/LevelSelector";
 import TracePanel from "./components/TracePanel";
-import type { ChatMessage, Mode, TestCase, TraceStep } from "./types";
+import { LEVELS, type ChatMessage, type Level, type TestCase, type TraceStep } from "./types";
 
 export default function App() {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [testCases, setTestCases] = useState<TestCase[]>([]);
-  const [mode, setMode] = useState<Mode>("agent");
+  const [level, setLevel] = useState<Level>(3);
   const [input, setInput] = useState("");
   const [busy, setBusy] = useState(false);
   const [openTraceId, setOpenTraceId] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+
+  const meta = LEVELS.find((l) => l.level === level)!;
 
   useEffect(() => {
     fetchTestCases().then(setTestCases).catch(console.error);
@@ -35,16 +37,16 @@ export default function App() {
     const userMsg: ChatMessage = {
       id: crypto.randomUUID(),
       role: "user",
-      mode,
+      level,
       content: query,
     };
     const botId = crypto.randomUUID();
     const botMsg: ChatMessage = {
       id: botId,
       role: "assistant",
-      mode,
+      level,
       content: "",
-      trace: mode === "agent" ? [] : undefined,
+      trace: meta.streaming ? [] : undefined,
       isStreaming: true,
     };
 
@@ -53,12 +55,12 @@ export default function App() {
     setBusy(true);
 
     try {
-      if (mode === "baseline") {
-        const answer = await fetchBaseline(query);
+      if (!meta.streaming) {
+        const answer = await fetchPlain(meta.endpoint, query);
         patchMessage(botId, { content: answer, isStreaming: false });
       } else {
         setOpenTraceId(botId);
-        await streamReact(query, (step) => {
+        await streamSteps(meta.endpoint, query, (step) => {
           appendTraceStep(botId, step);
           if (step.type === "final" || step.type === "guardrail" || step.type === "error") {
             patchMessage(botId, { content: step.content });
@@ -81,8 +83,8 @@ export default function App() {
 
   return (
     <div className="h-screen flex flex-col bg-background">
-      <header className="flex items-center justify-between px-6 sm:px-10 py-4 border-b border-surface-variant/40 bg-surface-container-lowest/70 backdrop-blur-md">
-        <div className="flex items-center gap-3">
+      <header className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 px-6 sm:px-10 py-4 border-b border-surface-variant/40 bg-surface-container-lowest/70 backdrop-blur-md">
+        <div className="flex items-center gap-3 shrink-0">
           <div className="w-9 h-9 rounded-full bg-gradient-to-br from-[#FF4D6D] to-[#9D4EDD] flex items-center justify-center">
             <span
               className="material-symbols-outlined text-[18px] text-white"
@@ -91,12 +93,26 @@ export default function App() {
               favorite
             </span>
           </div>
-          <span className="text-headline-md font-headline-md text-primary" style={{ fontSize: 20 }}>
-            Cupid Agent
-          </span>
+          <div>
+            <div className="text-headline-md font-headline-md text-primary" style={{ fontSize: 20 }}>
+              Cupid Agent
+            </div>
+            <div className="text-label-sm font-label-sm text-on-surface-variant">
+              4 cấp độ AI hội thoại
+            </div>
+          </div>
         </div>
-        <ModeToggle mode={mode} onChange={setMode} disabled={busy} />
+        <LevelSelector level={level} onChange={setLevel} disabled={busy} />
       </header>
+
+      <div className="px-6 sm:px-10 py-2 bg-surface-container-low border-b border-surface-variant/30">
+        <p className="text-label-sm font-label-sm text-on-surface-variant text-center">
+          <span className="text-primary font-semibold">
+            {meta.short} — {meta.name}:
+          </span>{" "}
+          {meta.desc}
+        </p>
+      </div>
 
       <ChatWindow
         messages={messages}
@@ -118,9 +134,7 @@ export default function App() {
             value={input}
             onChange={(e) => setInput(e.target.value)}
             disabled={busy}
-            placeholder={
-              mode === "agent" ? "Hỏi Cupid Agent bất cứ điều gì..." : "Hỏi Chatbot Baseline..."
-            }
+            placeholder={`Hỏi ${meta.name} bất cứ điều gì...`}
             className="flex-1 bg-transparent outline-none text-body-md font-body-md text-on-surface placeholder:text-on-surface-variant/60 disabled:opacity-60"
           />
           <button

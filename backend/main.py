@@ -17,6 +17,7 @@ sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "
 from providers import get_llm_provider
 
 from agent_runner import run_baseline, stream_react_agent
+from levels import run_rule_based, stream_autonomous_agent
 from schemas import BaselineResponse, ChatRequest, HealthResponse
 
 app = FastAPI(title="Cupid Agent API")
@@ -45,8 +46,25 @@ def test_cases():
         return json.load(f)
 
 
+def _sse(generator):
+    """Bọc generator step-dict thành SSE response."""
+
+    def event_stream():
+        for event in generator:
+            yield f"data: {json.dumps(event, ensure_ascii=False)}\n\n"
+
+    return StreamingResponse(event_stream(), media_type="text/event-stream")
+
+
+@app.post("/api/chat/level1", response_model=BaselineResponse)
+def chat_level1(req: ChatRequest):
+    """Cấp độ 1 — Rule-Based Bot: khớp từ khóa if/else, không LLM, không tool."""
+    return BaselineResponse(response=run_rule_based(req.query))
+
+
 @app.post("/api/chat/baseline", response_model=BaselineResponse)
 def chat_baseline(req: ChatRequest):
+    """Cấp độ 2 — LLM Chatbot: sinh text mượt nhưng không gọi được tool."""
     provider = get_llm_provider()
     response = run_baseline(req.query, provider)
     return BaselineResponse(response=response)
@@ -54,10 +72,13 @@ def chat_baseline(req: ChatRequest):
 
 @app.post("/api/chat/react")
 def chat_react(req: ChatRequest):
+    """Cấp độ 3 — ReAct Agent: Thought -> Action -> Observation, có gọi tool."""
     provider = get_llm_provider()
+    return _sse(stream_react_agent(req.query, provider))
 
-    def event_stream():
-        for event in stream_react_agent(req.query, provider):
-            yield f"data: {json.dumps(event, ensure_ascii=False)}\n\n"
 
-    return StreamingResponse(event_stream(), media_type="text/event-stream")
+@app.post("/api/chat/autonomous")
+def chat_autonomous(req: ChatRequest):
+    """Cấp độ 4 — Autonomous Agent: tự lập kế hoạch, có Memory, tự đánh giá."""
+    provider = get_llm_provider()
+    return _sse(stream_autonomous_agent(req.query, provider))
