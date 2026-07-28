@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cupid Agent — ReAct Visualizer & Studio</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Mermaid JS for Flowchart -->
+    <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body class="dark-theme">
+
+    <!-- APP HEADER -->
+    <header class="app-header">
+        <div class="header-container">
+            <div class="brand">
+                <div class="brand-icon">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="heart-icon"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg>
+                </div>
+                <div class="brand-text">
+                    <span class="brand-title">CUPID AGENT</span>
+                    <span class="brand-subtitle">ReAct Trace & Visual Studio — VinUni Lab 03</span>
+                </div>
+            </div>
+
+            <div class="header-actions">
+                <div class="provider-pill" id="providerPill">
+                    <span class="status-dot"></span>
+                    <span id="providerName">Provider: Loading...</span>
+                </div>
+                <button id="btnRunAll" class="btn btn-secondary">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+                    <span>Chạy Tất Cả Test Cases</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- MAIN CONTAINER -->
+    <main class="main-container">
+        
+        <!-- NAVIGATION TABS -->
+        <nav class="nav-tabs" role="tablist">
+            <button class="tab-btn active" data-tab="tab-playground" role="tab" aria-selected="true">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polygon points="10 8 16 12 10 16 10 8"/></svg>
+                <span>Live Interactive Playground</span>
+            </button>
+            <button class="tab-btn" data-tab="tab-testcases" role="tab" aria-selected="false">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+                <span>5 Test Cases Suite</span>
+            </button>
+            <button class="tab-btn" data-tab="tab-data" role="tab" aria-selected="false">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg>
+                <span>Cupid Domain Data</span>
+            </button>
+            <button class="tab-btn" data-tab="tab-flowchart" role="tab" aria-selected="false">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+                <span>Hybrid Flowchart</span>
+            </button>
+            <button class="tab-btn" data-tab="tab-report" role="tab" aria-selected="false">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+                <span>Trace Eval & Matrix</span>
+            </button>
+        </nav>
+
+        <!-- TAB CONTENT 1: LIVE PLAYGROUND -->
+        <section id="tab-playground" class="tab-content active">
+            
+            <!-- INPUT PANEL -->
+            <div class="card input-card">
+                <div class="card-header">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+                    <h3>Nhập Câu Hỏi Tư Vấn Ghép Đôi / Hẹn Hò</h3>
+                </div>
+                <div class="card-body">
+                    <div class="query-box">
+                        <textarea id="queryInput" placeholder="Ví dụ: Tôi là INTJ và người ấy là ENFP. Chúng tôi có hợp nhau không? Nếu có, hãy gợi ý một buổi hẹn hò lãng mạn ở Hà Nội..." rows="3"></textarea>
+                        <button id="btnRunQuery" class="btn btn-primary btn-lg">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+                            <span>Thực Thử ReAct Loop</span>
+                        </button>
+                    </div>
+
+                    <div class="presets-container">
+                        <span class="presets-label">Gợi ý Test Case:</span>
+                        <div class="preset-pills" id="presetPills">
+                            <!-- Injected by JS -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- COMPARISON CANVAS -->
+            <div class="comparison-grid">
+                
+                <!-- CHATBOT BASELINE COLUMN -->
+                <div class="card baseline-column">
+                    <div class="column-header header-baseline">
+                        <div class="header-left">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+                            <h3>Chatbot Baseline</h3>
+                        </div>
+                        <span class="badge badge-neutral">Không Có Tool</span>
+                    </div>
+                    <div class="column-body" id="baselineOutput">
+                        <div class="empty-state">
+                            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                            <p>Nhập câu hỏi hoặc chọn Test Case để quan sát phản hồi Chatbot gốc.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- REACT AGENT COLUMN -->
+                <div class="card agent-column">
+                    <div class="column-header header-agent">
+                        <div class="header-left">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2a2 2 0 0 1 2 2v2a2 2 0 0 1-2 2 2 2 0 0 1-2-2V4a2 2 0 0 1 2-2z"/><path d="M4 11a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v7a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-7z"/><circle cx="9" cy="15" r="1"/><circle cx="15" cy="15" r="1"/></svg>
+                            <h3>ReAct Agent Loop Visualizer</h3>
+                        </div>
+                        <span class="badge badge-success" id="agentBadge">Có Tool + Thought → Action → Observation</span>
+                    </div>
+                    <div class="column-body" id="agentTraceOutput">
+                        <div class="empty-state">
+                            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+                            <p>Vòng lặp suy luận ReAct sẽ hiển thị minh bạch từng bước tại đây.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </section>
+
+        <!-- TAB CONTENT 2: 5 TEST CASES SUITE -->
+        <section id="tab-testcases" class="tab-content">
+            <div class="section-title">
+                <h2>Bộ 5 Test Cases Tiêu Chuẩn (Config/test_cases.json)</h2>
+                <p>So sánh minh bạch hiệu năng giữa Chatbot Baseline và ReAct Agent trên 5 cấp độ bài toán.</p>
+            </div>
+            <div class="testcases-grid" id="testCasesSuite">
+                <!-- Injected by JS -->
+            </div>
+        </section>
+
+        <!-- TAB CONTENT 3: DOMAIN DATA -->
+        <section id="tab-data" class="tab-content">
+            <div class="section-title">
+                <h2>Cơ Sở Dữ Liệu Miền Cupid Agent (Config/cupid_data.json)</h2>
+                <p>Thông tin domain thực tế được cung cấp cho các Tools trong hệ thống.</p>
+            </div>
+            <div class="domain-data-grid" id="domainDataGrid">
+                <!-- Injected by JS -->
+            </div>
+        </section>
+
+        <!-- TAB CONTENT 4: HYBRID FLOWCHART -->
+        <section id="tab-flowchart" class="tab-content">
+            <div class="section-title">
+                <h2>Sơ Đồ Phân Luồng Hybrid (docs/hybrid_flowchart.mermaid)</h2>
+                <p>Thể hiện phân luồng thông minh: Câu hỏi đơn giản đi Chatbot Path, câu hỏi phức tạp đi ReAct Agent Path.</p>
+            </div>
+            <div class="card flowchart-card">
+                <div class="mermaid" id="mermaidDiagram">
+                    <!-- Mermaid rendered here -->
+                </div>
+            </div>
+        </section>
+
+        <!-- TAB CONTENT 5: TRACE EVAL & REPORT -->
+        <section id="tab-report" class="tab-content">
+            <div class="section-title">
+                <h2>Báo Cáo Đánh Giá Observability (docs/trace_eval.md)</h2>
+                <p>Scoring Matrix, Đánh giá Chatbot Baseline & Trace Log ReAct Agent.</p>
+            </div>
+            <div class="card markdown-card" id="reportContent">
+                <!-- Injected by JS -->
+            </div>
+        </section>
+
+    </main>
+
+    <!-- FOOTER -->
+    <footer class="app-footer">
+        <p>💘 <strong>Cupid Agent ReAct Visualizer</strong> — VinUni AI Codelab × GDGoC (Lab 03) — Zero-Conflict Architecture</p>
+    </footer>
+
+    <script src="app.js"></script>
+</body>
+</html>
