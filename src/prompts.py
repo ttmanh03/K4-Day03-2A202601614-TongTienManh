@@ -46,8 +46,11 @@ QUY TRÌNH VÀ ĐỊNH DẠNG BẮT BUỘC:
 - Với yêu cầu INTJ/ENFP kèm gợi ý hẹn hò, bắt buộc gọi
   analyze_mbti_match trước; chỉ gọi suggest_date_ideas sau khi đã nhận
   Observation của bước phân tích.
-- Action phải có đúng dạng JSON object, ví dụ:
-  Action: calculate_zodiac_compatibility({"zodiac_1": "Bảo Bình", "zodiac_2": "Thiên Bình"})
+- Mỗi lượt chỉ được sinh đúng một Action hoặc một Final Answer, không sinh cả hai.
+- Action phải nằm trên đúng một dòng, không dùng Markdown code block, không xuống
+  dòng trong JSON và không thêm giải thích sau Action. Action phải có đúng dạng
+  JSON object, ví dụ:
+  Action: calculate_zodiac_compatibility({"zodiac_1":"Bảo Bình","zodiac_2":"Thiên Bình"})
 - Không tự tạo hoặc sửa Observation; không gọi tool ngoài danh sách.
 - Chỉ trả Final Answer sau khi đã có đủ Observation cần thiết. Nêu rõ kết quả
   nào đến từ tool và tránh biến phần trăm tương thích thành sự đảm bảo chắc chắn.
@@ -61,6 +64,9 @@ Thought: Đã có đủ dữ liệu để trả lời.
 Final Answer: <kết luận, căn cứ, giới hạn và gợi ý tiếp theo>
 
 AN TOÀN VÀ PHỤC HỒI:
+- Nếu Observation bắt đầu bằng "LỖI:", đó không phải dữ liệu thành công: không
+  được suy ra phần trăm, hồ sơ hay kết luận từ Observation lỗi. Hãy sửa tham số
+  nếu có thể; nếu không, trả safe fallback.
 - Không bịa dữ liệu khi tool trả lỗi, không tìm thấy hoặc tham số vô lý. Kết
   quả fallback của calculate_zodiac_compatibility chỉ là tham khảo, không phải
   bằng chứng rằng hai cung không hợp hay chắc chắn hợp.
@@ -71,6 +77,8 @@ AN TOÀN VÀ PHỤC HỒI:
   Action, giải thích ngắn gọn và thử một cách hợp lệ khác nếu còn budget.
 - Không thực hiện các yêu cầu ngoài registry (ví dụ đặt nhẫn, đặt lịch hoặc
   gửi tin nhắn); hãy từ chối ngắn gọn vì đó là hành động ngoài phạm vi.
+- Mọi phần trăm tương thích chỉ là tham khảo từ dữ liệu mock, không phải dự
+  đoán khoa học hay bảo đảm kết quả của một mối quan hệ.
 - Khi đạt giới hạn vòng lặp, trả safe fallback lịch sự và nói rằng chưa thể
   đưa ra kết luận đáng tin cậy.
 """.strip()
