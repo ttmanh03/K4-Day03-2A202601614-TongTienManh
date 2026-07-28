@@ -74,9 +74,8 @@
 > * 🎲 **Hình thức 1 (Gọi ngẫu nhiên)**: Giảng viên gọi ngẫu nhiên một thành viên đại diện trong bất kỳ nhóm nào lên trình chiếu App, phản biện và trả lời câu hỏi bẫy từ các nhóm khác.
 > * 🔄 **Hình thức 2 (Chấm chéo nhóm)**: Giảng viên chỉ định 1 bạn đại diện (VD: Role 1 hoặc Role 5) đi sang nhóm khác để "tấn công" (dùng câu bẫy thử nghiệm Agent nhóm bạn) và chấm điểm chéo.
 
-- [ ] ⚔️ **Đội Tấn Công — Role 1 (Nguyễn Văn Trọng)**: Mang các câu test case của nhóm mình sang "xả" vào Agent của Nhóm bạn để kiểm thử khả năng chịu lỗi.
-- [ ] 🛡️ **Đội Phòng Thủ — Role 4 (Nguyễn Hùng Mạnh) demo App, Role 3 (Nguyễn Văn Thắng) giải thích Guardrail**: Quan sát Agent nhóm mình phản ứng trước câu hỏi của nhóm bạn. Kiểm tra xem Guardrail bảo vệ an toàn không.
-- [ ] 📝 **Role 5 (Tống Tiến Mạnh)**: Ghi **Biên bản Cross-Audit** vào `docs/cross_audit.md` (câu tấn công ➔ phản ứng của Agent ➔ Guardrail nào chặn ➔ kết luận). *Đây là artifact bắt buộc của tiêu chí 4 trong Rubric (20%).*
+- [X] ⚔️/🛡️ **Nguyễn Hùng Mạnh thuyết trình & phản biện, Tống Tiến Mạnh thao tác demo**: Trình chiếu App đủ 4 cấp độ AI, trả lời phản biện. Guardrail không bị khai thác thêm lỗi mới trong buổi demo.
+- [X] 📝 **Role 5 (Tống Tiến Mạnh)**: Ghi **Biên bản Cross-Audit** vào `docs/cross_audit.md`. *Đây là artifact bắt buộc của tiêu chí 4 trong Rubric (20%).* ➔ Kết quả: Đạt, kèm 2 góp ý cải thiện (ranh giới Cấp 2/3, độ sâu dữ liệu tool).
 - [X] 📊 **Role 5B (hoặc Role 5)**: Vẽ sơ đồ **Hybrid Flowchart** vào file `docs/hybrid_flowchart.mermaid` thể hiện phân luồng:
   - Câu hỏi đơn giản ➔ Đi đường Chatbot path.
   - Câu hỏi phức tạp ➔ Đi đường ReAct Agent path.
