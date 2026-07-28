@@ -26,9 +26,6 @@ from providers import get_llm_provider
 
 load_dotenv()
 
-# Action theo hợp đồng của Role 3: Action: tool_name({"param": "value"})
-ACTION_PATTERN = re.compile(r"Action:\s*(\w+)\((\{.*?\})\)", re.DOTALL)
-FINAL_ANSWER_PATTERN = re.compile(r"Final Answer:\s*(.+)", re.DOTALL)
 
 def load_test_cases():
     """Đọc bộ test cases từ config/test_cases.json của Role 1"""
@@ -55,25 +52,42 @@ def run_baseline_chatbot(user_query: str, provider):
     print(f"🤖 Chatbot trả lời:\n{response}")
 
 
-def _execute_action(tool_name: str, raw_args: str, executed_actions: set) -> str:
-    """Thực thi 1 Action mà LLM yêu cầu. Luôn trả về chuỗi Observation, không bao giờ crash."""
-    signature = (tool_name, raw_args)
+def _parse_action(text: str):
+    """Trích xuất (tool_name, kwargs_dict) từ dòng 'Action: name({...})'. Trả (None, None) nếu không có."""
+    m = re.search(r'Action:\s*(\w+)\s*\((.*)\)\s*$', text, re.MULTILINE | re.DOTALL)
+    if not m:
+        return None, None
+    tool_name = m.group(1).strip()
+    raw = m.group(2).strip()
+    try:
+        kwargs = json.loads(raw)
+        if isinstance(kwargs, dict):
+            return tool_name, kwargs
+    except (json.JSONDecodeError, ValueError):
+        pass
+    # Positional fallback: "val1", "val2"
+    parts = [p.strip().strip('"\'') for p in raw.split(',') if p.strip()]
+    return tool_name, {"__pos__": parts} if parts else {}
+
+
+def _call_tool(tool_name: str, kwargs: dict, executed_actions: set) -> str:
+    """Gọi tool từ AVAILABLE_TOOLS, trả về chuỗi Observation. Không bao giờ raise."""
+    signature = (tool_name, json.dumps(kwargs, sort_keys=True, ensure_ascii=False))
 
     if tool_name not in AVAILABLE_TOOLS:
-        return f"LỖI: Tool '{tool_name}' không tồn tại trong danh sách tool hợp lệ."
+        valid = ", ".join(AVAILABLE_TOOLS.keys())
+        return f"LỖI: Tool '{tool_name}' không tồn tại. Tool hợp lệ: [{valid}]."
 
     if signature in executed_actions:
-        return f"LỖI: Action {tool_name}({raw_args}) đã được gọi trước đó, không lặp lại. Hãy thử cách khác hoặc kết luận."
+        return f"LỖI: Action {tool_name}({kwargs}) đã được gọi trước đó, không lặp lại. Hãy thử cách khác hoặc kết luận."
 
+    fn = AVAILABLE_TOOLS[tool_name]
     try:
-        kwargs = json.loads(raw_args)
-    except json.JSONDecodeError as e:
-        return f"LỖI: Tham số JSON không hợp lệ cho tool '{tool_name}': {e}"
-
-    try:
-        observation = AVAILABLE_TOOLS[tool_name](**kwargs)
+        observation = fn(*kwargs["__pos__"]) if "__pos__" in kwargs else fn(**kwargs)
     except TypeError as e:
-        return f"LỖI: Tham số không khớp với tool '{tool_name}': {e}"
+        return f"LỖI: Tham số không hợp lệ khi gọi '{tool_name}' — {e}"
+    except Exception as e:
+        return f"LỖI: Ngoại lệ khi thực thi '{tool_name}' — {e}"
 
     executed_actions.add(signature)
     return observation
@@ -81,58 +95,72 @@ def _execute_action(tool_name: str, raw_args: str, executed_actions: set) -> str
 
 def run_react_agent(user_query: str, provider):
     """
-    Vòng lặp ReAct Agent thật (Thought -> Action -> Observation) có Guardrails.
-    Parse Action dạng JSON theo đúng hợp đồng mà Role 3 định nghĩa trong prompts.py.
+    Vòng lặp ReAct Agent (Thought -> Action -> Observation) có Guardrails.
+    Gọi LLM thực sự, parse Action, thực thi tool, cập nhật context.
     """
     print(f"\n🤖 [REACT AGENT] Câu hỏi: {user_query}")
-
-    history = f"Câu hỏi của người dùng: {user_query}"
+    conversation = f"Question: {user_query}\n"
     executed_actions = set()
+    step = 0
 
-    for step in range(1, MAX_ITERATIONS + 1):
+    while step < MAX_ITERATIONS:
+        step += 1
         print(f"\n--- 🔄 Vòng lặp ReAct (Step {step}/{MAX_ITERATIONS}) ---")
 
-        response = provider.generate(history, system_prompt=REACT_SYSTEM_PROMPT)
-        print(response.strip())
+        llm_output = provider.generate(conversation, system_prompt=REACT_SYSTEM_PROMPT)
+        print(f"📝 LLM Output:\n{llm_output}")
 
-        final_match = FINAL_ANSWER_PATTERN.search(response)
-        action_match = ACTION_PATTERN.search(response)
-
-        # Final Answer chỉ được chấp nhận nếu không có Action nào đứng trước nó
-        if final_match and not (action_match and action_match.start() < final_match.start()):
+        # Trường hợp 1: Final Answer
+        if "Final Answer:" in llm_output:
+            idx = llm_output.index("Final Answer:")
+            final = llm_output[idx + len("Final Answer:"):].strip()
+            print(f"\n🏁 Final Answer:\n{final}")
             return
 
-        if not action_match:
-            observation = "LỖI: Phản hồi không đúng định dạng Action/Final Answer yêu cầu."
+        # Trường hợp 2: Action
+        tool_name, kwargs = _parse_action(llm_output)
+        if tool_name:
+            obs = _call_tool(tool_name, kwargs or {}, executed_actions)
+            print(f"🛠️ Action: {tool_name}({kwargs})")
+            print(f"👁️ Observation: {obs}")
+            conversation += llm_output.strip() + "\n"
+            conversation += f"Observation: {obs}\n"
         else:
-            tool_name, raw_args = action_match.groups()
-            observation = _execute_action(tool_name, raw_args, executed_actions)
+            print("⚠️ Không parse được Action — thêm gợi ý vào context.")
+            conversation += llm_output.strip() + "\n"
+            conversation += "Observation: Không tìm thấy Action hợp lệ. Hãy đưa ra Final Answer hoặc thử Action khác.\n"
 
-        print(f"👁️ Observation: {observation}")
-        history += f"\n{response.strip()}\nObservation: {observation}"
-
-    print(f"🛡️ GUARDRAIL TRIGGERED: Đã đạt giới hạn tối đa {MAX_ITERATIONS} bước. Ngắt lặp an toàn!")
+    print(f"\n🛡️ GUARDRAIL TRIGGERED: Đã đạt giới hạn tối đa {MAX_ITERATIONS} bước. Ngắt lặp an toàn!")
     print("🏁 Final Answer (fallback an toàn): Xin lỗi, mình chưa thu thập đủ dữ liệu đáng tin cậy để kết luận trong giới hạn số bước cho phép. Bạn vui lòng cung cấp thêm thông tin cụ thể để mình hỗ trợ tiếp nhé.")
 
 
 if __name__ == "__main__":
     print("==================================================")
-    print("🏫 ĐẠI HỌC VINUNI - BÀI LAB 3: CHATBOT VS REACT AGENT")
+    print("💘 CUPID AGENT — CHATBOT vs REACT AGENT")
+    print("   VinUni AI Codelab × GDGoC — Lab 03")
     print("==================================================")
-    
-    # Khởi tạo Multi-Provider LLM Adapter (Đọc từ biến môi trường LLM_PROVIDER)
+
     provider = get_llm_provider()
     model_name = getattr(provider, "model_name", "Offline Mock Mode")
     print(f"🔌 LLM Provider đang hoạt động: {provider.__class__.__name__} (Model: {model_name})")
-    
+
     tests = load_test_cases()
     print(f"✅ Đã tải thành công {len(tests)} Test Cases từ config/test_cases.json\n")
-    
-    # Chạy thử câu test số 3
-    sample_query = tests[2]["question"]
-    
-    print("--- DEMO 1: CHẠY TRÊN CHATBOT BASELINE ---")
-    run_baseline_chatbot(sample_query, provider)
-    
-    print("\n--- DEMO 2: CHẠY TRÊN REACT AGENT ---")
-    run_react_agent(sample_query, provider)
+
+    for tc in tests:
+        print(f"\n{'#'*55}")
+        print(f"  TEST CASE {tc['id']}: {tc['category']}")
+        print(f"{'#'*55}")
+        print(f"  📋 Câu hỏi: {tc['question']}")
+        print(f"  🎯 Kỳ vọng: {tc['expected_behavior']}")
+
+        print(f"\n--- DEMO 1: CHATBOT BASELINE ---")
+        run_baseline_chatbot(tc["question"], provider)
+
+        print(f"\n--- DEMO 2: REACT AGENT ---")
+        run_react_agent(tc["question"], provider)
+
+    print(f"\n{'='*55}")
+    print("🏆 Hoàn tất chạy 5 Test Cases! Phân tích trace bên trên.")
+    print(f"{'='*55}")
+
