@@ -1,30 +1,32 @@
 """
-🧠 CẤP ĐỘ 3: REACTIVE AGENT (ReAct Agent - Thought -> Action -> Observation)
-Agent biết suy nghĩ, tự ra quyết định gọi Tool thực tế và quan sát kết quả để trả lời.
+🤖 CẤP ĐỘ 3: REACTIVE AGENT (ReAct Loop: Thought -> Action -> Observation)
+Sử dụng LLM API Key + Đăng ký công cụ (Tools) + Phanh an toàn Guardrails.
 """
 
-import json
+import os
+import sys
 
-# Định nghĩa Tool thực tế
-def get_weather(city: str) -> str:
-    return f"Thời tiết tại {city}: 28°C, Nắng nhẹ, Độ ẩm 65%."
+# Ensure src/ is in path
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-def search_flights(origin: str, destination: str) -> str:
-    return f"Chuyến bay {origin} -> {destination}: Vé VN123 giá 1.500.000 VNĐ."
+from app import run_react_agent
+from providers import get_llm_provider
 
-def reactive_agent_step(user_goal: str):
-    print(f"🎯 Goal: {user_goal}")
+
+def reactive_agent_demo(user_input: str, provider=None):
+    if provider is None:
+        provider = get_llm_provider()
     
-    # Bước 1: Thought & Action gọi weather tool
-    print("\n🧠 [Thought 1]: Cần kiểm tra thời tiết thực tế trước.")
-    print("🛠️ [Action 1] : get_weather('Hà Nội')")
-    obs1 = get_weather("Hà Nội")
-    print(f"👁️ [Observation 1]: {obs1}")
-    
-    # Bước 2: Thought & Final Answer
-    print("\n🧠 [Thought 2]: Đã có dữ liệu thời tiết 28°C nắng nhẹ. Đưa ra câu trả lời.")
-    print(f"🏁 [Final Answer]: Thời tiết Hà Nội hôm nay 28°C nắng nhẹ. Bạn nên mặc áo phông thoáng mát!")
+    run_react_agent(user_input, provider)
+
 
 if __name__ == "__main__":
-    print("=== DEMO CẤP ĐỘ 3: REACTIVE AGENT (ReAct Loop) ===")
-    reactive_agent_step("Thời tiết Hà Nội hôm nay thế nào và nên mặc gì?")
+    print("==================================================")
+    print("🤖 DEMO CẤP ĐỘ 3: REACTIVE AGENT (REACT LOOP + TOOLS)")
+    print("==================================================")
+    provider = get_llm_provider()
+    model_name = getattr(provider, "model_name", "Mock")
+    print(f"🔌 Using LLM Provider: {provider.__class__.__name__} ({model_name})\n")
+
+    query = "Tôi là INTJ và người ấy là ENFP. Chúng tôi có hợp nhau không? Nếu có, hãy gợi ý một buổi hẹn hò lãng mạn ở Hà Nội với ngân sách trung bình."
+    reactive_agent_demo(query, provider)
