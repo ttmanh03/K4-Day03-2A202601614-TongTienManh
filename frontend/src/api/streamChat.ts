@@ -1,35 +1,39 @@
 import type { TestCase, TraceStep } from "../types";
 
-const API_BASE = "/api";
-
-export async function fetchBaseline(query: string): Promise<string> {
-  const res = await fetch(`${API_BASE}/chat/baseline`, {
+export async function fetchPlain(
+  endpoint: string,
+  query: string,
+  sessionId: string,
+): Promise<string> {
+  const res = await fetch(endpoint, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ query }),
+    body: JSON.stringify({ query, session_id: sessionId }),
   });
   if (!res.ok) {
-    throw new Error(`Baseline request failed: ${res.status}`);
+    throw new Error(`Request failed: ${res.status}`);
   }
   const data = await res.json();
   return data.response as string;
 }
 
 /**
- * POST /api/chat/react trả về SSE (Content-Type: text/event-stream).
+ * Endpoint stream trả về SSE (Content-Type: text/event-stream).
  * EventSource native chỉ hỗ trợ GET nên tự đọc ReadableStream + tách frame "data: ...\n\n".
  */
-export async function streamReact(
+export async function streamSteps(
+  endpoint: string,
   query: string,
+  sessionId: string,
   onStep: (step: TraceStep) => void,
 ): Promise<void> {
-  const res = await fetch(`${API_BASE}/chat/react`, {
+  const res = await fetch(endpoint, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ query }),
+    body: JSON.stringify({ query, session_id: sessionId }),
   });
   if (!res.ok || !res.body) {
-    throw new Error(`ReAct request failed: ${res.status}`);
+    throw new Error(`Stream request failed: ${res.status}`);
   }
 
   const reader = res.body.getReader();
@@ -59,7 +63,19 @@ export async function streamReact(
 }
 
 export async function fetchTestCases(): Promise<TestCase[]> {
-  const res = await fetch(`${API_BASE}/test-cases`);
+  const res = await fetch("/api/test-cases");
   if (!res.ok) throw new Error(`Test-cases request failed: ${res.status}`);
   return res.json();
+}
+
+export async function fetchMemory(
+  sessionId: string,
+): Promise<{ long_term: Record<string, string>; short_term: unknown[] }> {
+  const res = await fetch(`/api/memory/${sessionId}`);
+  if (!res.ok) throw new Error(`Memory request failed: ${res.status}`);
+  return res.json();
+}
+
+export async function clearMemory(sessionId: string): Promise<void> {
+  await fetch(`/api/memory/${sessionId}`, { method: "DELETE" });
 }

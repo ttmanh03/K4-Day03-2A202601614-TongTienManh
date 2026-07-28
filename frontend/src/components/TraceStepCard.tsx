@@ -4,9 +4,14 @@ const STEP_STYLE: Record<
   TraceStep["type"],
   { icon: string; label: string; accent: string; bg: string }
 > = {
+  plan: { icon: "checklist", label: "Planning", accent: "text-secondary", bg: "bg-secondary-container/25" },
   thought: { icon: "psychology", label: "Thought", accent: "text-secondary", bg: "bg-secondary-container/20" },
   action: { icon: "bolt", label: "Action", accent: "text-primary", bg: "bg-primary-container/10" },
   observation: { icon: "visibility", label: "Observation", accent: "text-on-surface-variant", bg: "bg-surface-container-low" },
+  notice: { icon: "info", label: "Hệ thống nhắc", accent: "text-outline", bg: "bg-surface-container" },
+  memory: { icon: "database", label: "Memory", accent: "text-tertiary", bg: "bg-tertiary-fixed/50" },
+  memory_saved: { icon: "bookmark_added", label: "Ghi nhớ dài hạn", accent: "text-secondary", bg: "bg-secondary-fixed/50" },
+  evaluation: { icon: "fact_check", label: "Self-Evaluation", accent: "text-secondary", bg: "bg-secondary-fixed/50" },
   final: { icon: "flag", label: "Final Answer", accent: "text-primary", bg: "bg-primary-container/15" },
   guardrail: { icon: "shield", label: "Guardrail", accent: "text-error", bg: "bg-error-container/40" },
   error: { icon: "error", label: "Lỗi", accent: "text-error", bg: "bg-error-container/40" },
@@ -32,7 +37,9 @@ export default function TraceStepCard({ step, isLast }: { step: TraceStep; isLas
             {step.tool}({JSON.stringify(step.args)})
           </code>
         ) : (
-          <p className="text-body-md font-body-md text-on-surface leading-relaxed">{step.content}</p>
+          <p className="text-body-md font-body-md text-on-surface leading-relaxed whitespace-pre-line">
+            {step.content}
+          </p>
         )}
       </div>
     </div>

@@ -34,9 +34,9 @@ export default function ChatWindow({ messages, testCases, onOpenTrace, onPickSug
         <h1 className="text-headline-lg font-headline-lg text-center bg-gradient-to-r from-[#FF4D6D] to-[#9D4EDD] bg-clip-text text-transparent mb-4">
           Hiểu đúng nhau.
         </h1>
-        <p className="text-body-md font-body-md text-on-surface-variant text-center max-w-md mb-10">
-          Cupid Agent giúp bạn khám phá mức độ tương thích — và cho bạn thấy chính xác nó đã suy
-          luận thế nào để đi tới kết luận đó.
+        <p className="text-body-md font-body-md text-on-surface-variant text-center max-w-lg mb-10">
+          Chọn 1 trong 4 cấp độ AI ở thanh trên, rồi đặt cùng một câu hỏi để thấy rõ sự khác biệt:
+          từ bot khớp từ khóa cố định đến agent tự lập kế hoạch và gọi công cụ.
         </p>
 
         <div className="grid sm:grid-cols-2 gap-3 w-full max-w-3xl">

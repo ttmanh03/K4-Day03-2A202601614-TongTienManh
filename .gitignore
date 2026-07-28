@@ -13,3 +13,6 @@ stitch_cupid_agent_ai_analysis (*)/
 # Frontend
 frontend/node_modules/
 frontend/dist/
+
+# Bộ nhớ dài hạn sinh ra lúc chạy (dữ liệu người dùng, không đưa lên git)
+backend/memory_store.json
