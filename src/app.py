@@ -48,6 +48,31 @@ def run_baseline_chatbot(user_query: str, provider):
     print(f"\n💬 [CHATBOT BASELINE] Câu hỏi: {user_query}")
     response = provider.generate(user_query, system_prompt=CHATBOT_BASELINE_PROMPT)
     print(f"🤖 Chatbot trả lời:\n{response}")
+    return response
+
+
+# Prompt quy định nhãn "Final Answer:" nhưng LLM hay viết tắt thành "Final:".
+# Bắt cả 2 dạng — nếu không, loop chạy phí hết budget rồi rơi guardrail oan
+# dù câu trả lời đã sẵn sàng ngay vòng đầu.
+FINAL_RE = re.compile(r'Final\s*(?:Answer)?\s*:', re.IGNORECASE)
+
+
+def _split_final(text: str):
+    """Trả về phần Final Answer nếu có, ngược lại None."""
+    m = FINAL_RE.search(text)
+    return text[m.end():].strip() if m else None
+
+
+def _looks_like_answer(text: str) -> bool:
+    """
+    Đúng khi LLM viết thẳng câu trả lời cho người dùng mà quên hẳn nhãn
+    'Final Answer:'. Đoạn text đủ dài mà không chứa 'Action:' thì gần như chắc
+    chắn là câu trả lời, không phải một bước suy luận.
+    """
+    stripped = re.sub(r'^\s*Thought:\s*', '', text.strip(), flags=re.IGNORECASE)
+    if len(stripped) < 80:
+        return False
+    return "Action:" not in stripped
 
 
 def _parse_action(text: str):
@@ -99,6 +124,8 @@ def run_react_agent(user_query: str, provider):
     print(f"\n🤖 [REACT AGENT] Câu hỏi: {user_query}")
     conversation = f"Question: {user_query}\n"
     executed_actions = set()
+    tools_called = []      # thứ tự tool đã gọi, dùng để đối chiếu với test case
+    observations = []      # dữ liệu tool đã tra được, dùng cho fallback khi hết budget
     step = 0
 
     while step < MAX_ITERATIONS:
@@ -108,12 +135,12 @@ def run_react_agent(user_query: str, provider):
         llm_output = provider.generate(conversation, system_prompt=REACT_SYSTEM_PROMPT)
         print(f"📝 LLM Output:\n{llm_output}")
 
-        # Trường hợp 1: Final Answer
-        if "Final Answer:" in llm_output:
-            idx = llm_output.index("Final Answer:")
-            final = llm_output[idx + len("Final Answer:"):].strip()
+        # Trường hợp 1: Final Answer (bắt cả "Final:" lẫn "Final Answer:")
+        final = _split_final(llm_output)
+        if final is not None:
             print(f"\n🏁 Final Answer:\n{final}")
-            return
+            return {"final_answer": final, "steps": step, "tools_called": tools_called,
+                    "guardrail_triggered": False}
 
         # Trường hợp 2: Action
         tool_name, kwargs = _parse_action(llm_output)
@@ -121,15 +148,40 @@ def run_react_agent(user_query: str, provider):
             obs = _call_tool(tool_name, kwargs or {}, executed_actions)
             print(f"🛠️ Action: {tool_name}({kwargs})")
             print(f"👁️ Observation: {obs}")
+            tools_called.append(tool_name)
+            if not obs.startswith("LỖI:"):
+                observations.append(obs)
             conversation += llm_output.strip() + "\n"
             conversation += f"Observation: {obs}\n"
-        else:
-            print("⚠️ Không parse được Action — thêm gợi ý vào context.")
-            conversation += llm_output.strip() + "\n"
-            conversation += "Observation: Không tìm thấy Action hợp lệ. Hãy đưa ra Final Answer hoặc thử Action khác.\n"
+            continue
 
+        # Trường hợp 3: LLM viết thẳng câu trả lời nhưng quên nhãn Final Answer
+        if _looks_like_answer(llm_output):
+            answer = re.sub(r'^\s*Thought:\s*', '', llm_output.strip(), flags=re.IGNORECASE)
+            print(f"\n🏁 Final Answer (thiếu nhãn, đã tự nhận diện):\n{answer}")
+            return {"final_answer": answer, "steps": step, "tools_called": tools_called,
+                    "guardrail_triggered": False}
+
+        print("⚠️ Không parse được Action — thêm gợi ý vào context.")
+        conversation += llm_output.strip() + "\n"
+        conversation += "Observation: Không tìm thấy Action hợp lệ. Hãy đưa ra Final Answer hoặc thử Action khác.\n"
+
+    # Hết budget. Nếu đã tra được dữ liệu thì vẫn trả cho người dùng, đừng xin lỗi
+    # suông rồi vứt bỏ kết quả tool đã tốn công gọi.
     print(f"\n🛡️ GUARDRAIL TRIGGERED: Đã đạt giới hạn tối đa {MAX_ITERATIONS} bước. Ngắt lặp an toàn!")
-    print("🏁 Final Answer (fallback an toàn): Xin lỗi, mình chưa thu thập đủ dữ liệu đáng tin cậy để kết luận trong giới hạn số bước cho phép. Bạn vui lòng cung cấp thêm thông tin cụ thể để mình hỗ trợ tiếp nhé.")
+    if observations:
+        fallback = (
+            "Mình chưa kịp tổng hợp thành kết luận hoàn chỉnh trong giới hạn số bước, "
+            "nhưng đây là dữ liệu đã tra được:\n- " + "\n- ".join(observations)
+        )
+    else:
+        fallback = (
+            "Xin lỗi, mình chưa thu thập đủ dữ liệu đáng tin cậy để kết luận trong giới hạn "
+            "số bước cho phép. Bạn vui lòng cung cấp thêm thông tin cụ thể để mình hỗ trợ tiếp nhé."
+        )
+    print(f"🏁 Final Answer (fallback an toàn): {fallback}")
+    return {"final_answer": fallback, "steps": step, "tools_called": tools_called,
+            "guardrail_triggered": True}
 
 
 if __name__ == "__main__":

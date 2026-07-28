@@ -120,7 +120,7 @@ Tác hại kép: (1) tốn 4× số lần gọi API cho một câu hỏi lẽ ra
 
 ### Solution
 
-Em sửa theo hướng **nới điều kiện nhận diện, không siết thêm prompt** — [`backend/agent_runner.py:48-55`](../../backend/agent_runner.py#L48-L55):
+Em sửa theo hướng **nới điều kiện nhận diện, không siết thêm prompt** — [`backend/agent_runner.py:48-55`](../../backend/agent_runner.py#L48-L55), sau đó port sang [`src/app.py:64-68`](../../src/app.py#L64-L68) để bản CLI dùng chung logic:
 
 ```python
 # Prompt yêu cầu "Final Answer:" nhưng LLM hay viết tắt thành "Final:".
@@ -152,7 +152,18 @@ Cùng đợt em sửa thêm 3 lỗi cùng họ "hệ thống tin LLM quá mức"
 
 ### Verification
 
-Em viết 2 script để lỗi này không tái phát, kết quả **lần chạy gần nhất** (commit `2d626fa`):
+Em chạy **A/B đối chứng** trên 2 câu không cần tool, cùng model `deepseek-v4-flash`, một nhánh giữ điều kiện cũ (`"Final Answer:" in llm_output`), một nhánh dùng `FINAL_RE`:
+
+| Test case | Điều kiện cũ | Sau vá |
+| :--- | :-: | :-: |
+| TC#1 — yếu tố mối quan hệ lành mạnh | 2 step | **1 step** |
+| TC#2 — vì sao MBTI được dùng xét hợp nhau | 2 step | **1 step** |
+
+Bản vá cắt được **một nửa số lần gọi LLM** cho nhóm câu hỏi này. Kèm đó, `backend/benchmark.py` chạy đủ 5 test case sau vá cho **5/5 pass, 0/5 chạm `MAX_ITERATIONS`**.
+
+Một chi tiết em chỉ phát hiện khi đo: **model không nhất quán**. Cùng một câu hỏi, có lượt nó viết đúng `Final Answer:`, có lượt không viết nhãn nào — nên điều kiện cũ đôi khi vẫn chạy đúng, đôi khi tốn thêm vòng. Nghĩa là bug này **không tái hiện ổn định**, và chính đặc tính đó làm nó khó bị phát hiện nếu chỉ test tay vài lần. Trường hợp xấu nhất — model không bao giờ phát ra nhãn được nhận diện và loop chạy hết budget rồi trả safe fallback — em có gặp lúc phát triển nhưng **không tái hiện được trong lần A/B này**, nên không đưa vào bảng số.
+
+Em cũng viết 2 script để lỗi không tái phát, kết quả **lần chạy gần nhất** (commit `2d626fa`):
 
 - `backend/verify_guardrails.py` — **19 PASS**: 5 đòn tấn công (out-of-scope, dữ liệu bịa, prompt injection, tool không tồn tại, nội dung nhạy cảm) và các case giới hạn vòng lặp.
 - `backend/verify_levels.py` — **35 PASS**: mỗi cấp độ đúng vai trò, memory chỉ tồn tại ở Cấp 4, không cấp nào lộ tên tool ra ngoài.

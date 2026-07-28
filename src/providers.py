@@ -12,8 +12,43 @@ load_dotenv()
 
 class BaseLLMProvider:
     """Interface cơ sở cho tất cả các LLM Provider"""
+
+    # Usage của lần generate() gần nhất, dạng dict hoặc None nếu provider không
+    # trả về. Khai báo ở class level để mọi subclass có sẵn thuộc tính này mà
+    # không phải sửa __init__ của chúng.
+    last_usage = None
+
     def generate(self, prompt: str, system_prompt: str = "") -> str:
         raise NotImplementedError
+
+    def _record_usage(self, usage) -> None:
+        """
+        Chuẩn hoá object usage của từng SDK về một dict chung.
+
+        Mỗi nhà cung cấp đặt tên field khác nhau:
+        OpenAI/DeepSeek/OpenRouter -> prompt_tokens / completion_tokens
+        Anthropic                  -> input_tokens / output_tokens
+        Gemini                     -> prompt_token_count / candidates_token_count
+        """
+        if usage is None:
+            self.last_usage = None
+            return
+
+        def pick(*names):
+            for n in names:
+                # OpenRouter trả JSON đã parse thành dict, các SDK khác trả object.
+                v = usage.get(n) if isinstance(usage, dict) else getattr(usage, n, None)
+                if v is not None:
+                    return v
+            return 0
+
+        prompt_t = pick("prompt_tokens", "input_tokens", "prompt_token_count")
+        completion_t = pick("completion_tokens", "output_tokens", "candidates_token_count")
+        self.last_usage = {
+            "prompt_tokens": prompt_t,
+            "completion_tokens": completion_t,
+            "total_tokens": prompt_t + completion_t,
+        }
 
 
 class GeminiProvider(BaseLLMProvider):
@@ -33,8 +68,10 @@ class GeminiProvider(BaseLLMProvider):
                 model=self.model_name,
                 contents=contents
             )
+            self._record_usage(getattr(response, "usage_metadata", None))
             return response.text
         except Exception as e:
+            self.last_usage = None
             return f"[Gemini Exception]: {str(e)}"
 
 
@@ -59,8 +96,10 @@ class OpenAIProvider(BaseLLMProvider):
                 model=self.model_name,
                 messages=messages
             )
+            self._record_usage(getattr(response, "usage", None))
             return response.choices[0].message.content
         except Exception as e:
+            self.last_usage = None
             return f"[OpenAI Exception]: {str(e)}"
 
 
@@ -85,8 +124,10 @@ class AnthropicProvider(BaseLLMProvider):
                 kwargs["system"] = system_prompt
                 
             response = client.messages.create(**kwargs)
+            self._record_usage(getattr(response, "usage", None))
             return response.content[0].text
         except Exception as e:
+            self.last_usage = None
             return f"[Anthropic Exception]: {str(e)}"
 
 
@@ -113,8 +154,10 @@ class DeepSeekProvider(BaseLLMProvider):
                 model=self.model_name,
                 messages=messages
             )
+            self._record_usage(getattr(response, "usage", None))
             return response.choices[0].message.content
         except Exception as e:
+            self.last_usage = None
             return f"[DeepSeek Exception]: {str(e)}"
 
 
@@ -144,10 +187,13 @@ class OpenRouterProvider(BaseLLMProvider):
             res = requests.post("https://openrouter.ai/api/v1/chat/completions", headers=headers, json=payload, timeout=30)
             if res.status_code == 200:
                 data = res.json()
+                self._record_usage(data.get("usage"))
                 return data["choices"][0]["message"]["content"]
             else:
+                self.last_usage = None
                 return f"[OpenRouter API Error {res.status_code}]: {res.text}"
         except Exception as e:
+            self.last_usage = None
             return f"[OpenRouter Exception]: {str(e)}"
 
 

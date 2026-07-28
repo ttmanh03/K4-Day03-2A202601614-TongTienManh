@@ -1,0 +1,194 @@
+{
+  "summary": {
+    "timestamp": "2026-07-28T22:02:31",
+    "model": "deepseek-v4-flash",
+    "test_cases": 5,
+    "passed": 5,
+    "success_rate_pct": 100.0,
+    "react": {
+      "latency_p50_ms": 12406.49,
+      "latency_p99_ms": 20779.06,
+      "latency_mean_ms": 12603.59,
+      "avg_tokens_per_task": 3208.6,
+      "total_cost_usd": 0.000504
+    },
+    "baseline": {
+      "latency_p50_ms": 11625.72,
+      "latency_p99_ms": 12637.37,
+      "avg_tokens_per_task": 1270.4,
+      "total_cost_usd": 0.000238
+    },
+    "total_cost_usd": 0.000742
+  },
+  "cases": [
+    {
+      "id": 1,
+      "category": "🟢 Đơn giản (Chỉ cần LLM)",
+      "question": "Một mối quan hệ lành mạnh và bền vững cần có những yếu tố nào?",
+      "tools_required": [],
+      "baseline": {
+        "answer": "Một mối quan hệ lành mạnh và bền vững thường dựa trên những nền tảng chung như: **sự tin tưởng**, **tôn trọng lẫn nhau**, **giao tiếp cởi mở và trung thực**, **cảm thông và đồng cảm**, cùng **khả năng giải quyết xung đột một cách tích cực**. Bên cạnh đó, việc duy trì không gian riêng tư, ủng hộ mục tiêu cá nhân của đối phương, và cùng nhau chia sẻ những giá trị sống cũng rất quan trọng. Tất nhiên, mỗi cặp đôi có thể có những yếu tố riêng biệt, nhưng đây là những điểm chung thường thấy. Hy vọng bạn tìm thấy điều phù hợp cho mình! 💕",
+        "latency_ms": 7076.58,
+        "prompt_tokens": 396,
+        "completion_tokens": 529,
+        "llm_calls": 1,
+        "cost_usd": 3.3e-05
+      },
+      "react": {
+        "final_answer": "Một mối quan hệ lành mạnh và bền vững thường được xây dựng trên những nền tảng sau:\n\n- **Tin tưởng và trung thực**: Cả hai đều có thể chia sẻ suy nghĩ, cảm xúc mà không sợ bị phán xét hay lừa dối.\n- **Tôn trọng lẫn nhau**: Tôn trọng ranh giới, sở thích, quan điểm riêng của đối phương.\n- **Giao tiếp cởi mở**: Biết lắng nghe và diễn đạt nhu cầu, mong muốn một cách rõ ràng, không đổ lỗi.\n- **Đồng điệu về giá trị**: Có chung những nguyên tắc sống cốt lõi (ví dụ: quan điểm về gia đình, tài chính, tương lai).\n- **Chấp nhận và hỗ trợ**: Cả hai sẵn sàng giúp đỡ nhau phát triển, thay vì cố thay đổi đối phương.\n- **Giải quyết xung đột lành mạnh**: Không tránh né vấn đề, biết thỏa hiệp và tha thứ.\n- **Dành thời gian chất lượng**: Duy trì sự kết nối qua những hoạt động chung và sự quan tâm hàng ngày.\n\nNhững yếu tố này là kim chỉ nam, nhưng mỗi cặp đôi sẽ có cách thể hiện riêng. Không có công thức hoàn hảo, điều quan trọng là cả hai cùng nỗ lực và cam kết vun đắp.",
+        "steps": 1,
+        "tools_called": [],
+        "guardrail_triggered": false,
+        "latency_ms": 6106.03,
+        "prompt_tokens": 1214,
+        "completion_tokens": 551,
+        "llm_calls": 1,
+        "cost_usd": 5.7e-05
+      },
+      "scores": {
+        "tool_selection": 2,
+        "termination": 2,
+        "grounding": 2,
+        "passed": true
+      }
+    },
+    {
+      "id": 2,
+      "category": "🟢 Đơn giản (Chỉ cần LLM)",
+      "question": "Tại sao tính cách MBTI lại được nhiều người dùng để đánh giá sự phù hợp trong tình yêu?",
+      "tools_required": [],
+      "baseline": {
+        "answer": "Chào bạn! Đó là một câu hỏi thú vị. MBTI thực sự trở nên phổ biến trong việc đánh giá sự phù hợp trong tình yêu vì một số lý do tổng quát:\n\nThứ nhất, MBTI cung cấp một \"ngôn ngữ chung\" để mọi người mô tả và hiểu về tính cách của nhau. Các nhóm như Hướng ngoại (E) hay Hướng nội (I), Lý trí (T) hay Cảm xúc (F) giúp chúng ta dễ dàng nhận ra sự khác biệt trong cách giao tiếp, ra quyết định hoặc thể hiện tình cảm. Điều này tạo cảm giác thấu hiểu hơn, đồng thời gợi ý những cách dung hòa.\n\nThứ hai, nhiều người thấy thú vị khi khám phá xem đối phương có bổ sung hay xung đột với mình về mặt tính cách. Ví dụ, người thuộc nhóm NF (trực giác – cảm xúc) thường tìm kiếm sự kết nối sâu sắc, trong khi nhóm ST (giác quan – lý trí) lại thiên về thực tế và ổn định. Biết được điều này giúp các cặp đôi điều chỉnh kỳ vọng và giao tiếp tốt hơn.\n\nTuy nhiên, mình muốn nhấn mạnh rằng **MBTI chỉ là một công cụ tham khảo tổng quát, không phải chân lý tuyệt đối**. Sự phù hợp thực sự trong tình yêu còn phụ thuộc vào giá trị sống, mục tiêu chung, sự tôn trọng và nỗ lực của cả hai. Dùng MBTI để hiểu nhau là tốt, nhưng đừng biến nó thành \"khuôn mẫu\" cứng nhắc hay lý do để phán xét đối phương. Mỗi người đều có cá tính riêng, không hoàn toàn nằm gọn trong 16 loại.\n\nHy vọng câu trả lời này hữu ích cho bạn! Nếu bạn muốn thảo luận thêm về cách áp dụng MBTI trong mối quan hệ một cách cân bằng, mình luôn sẵn lòng. 😊",
+        "latency_ms": 11022.84,
+        "prompt_tokens": 403,
+        "completion_tokens": 984,
+        "llm_calls": 1,
+        "cost_usd": 5.3e-05
+      },
+      "react": {
+        "final_answer": "MBTI trở nên phổ biến trong đánh giá tình yêu vì nó cung cấp một khung ngôn ngữ chung và trực quan để mô tả sự khác biệt cá nhân trong giao tiếp, ra quyết định và nhu cầu năng lượng. Nhiều người thấy rằng việc biết loại hình MBTI của đối phương giúp họ lý giải những xung đột hoặc điểm mạnh tiềm ẩn trong mối quan hệ. Tuy nhiên, cần nhấn mạnh rằng đây chỉ là một công cụ tham khảo, không phải phán xét khoa học tuyệt đối. Mối quan hệ thực tế còn phụ thuộc vào nhiều yếu tố như giá trị sống, trải nghiệm, sự tôn trọng và nỗ lực từ cả hai phía.",
+        "steps": 1,
+        "tools_called": [],
+        "guardrail_triggered": false,
+        "latency_ms": 4610.66,
+        "prompt_tokens": 1221,
+        "completion_tokens": 396,
+        "llm_calls": 1,
+        "cost_usd": 5.1e-05
+      },
+      "scores": {
+        "tool_selection": 2,
+        "termination": 2,
+        "grounding": 2,
+        "passed": true
+      }
+    },
+    {
+      "id": 3,
+      "category": "🟡 Single-step (Cần 1 Tool — Phân tích cung hoàng đạo)",
+      "question": "Bảo Bình và Thiên Bình có hợp nhau không? Cho tôi biết mức độ tương thích.",
+      "tools_required": [
+        "calculate_zodiac_compatibility"
+      ],
+      "baseline": {
+        "answer": "Chào bạn! Mình rất vui khi được chia sẻ góc nhìn về cung Bảo Bình (Aquarius) và Thiên Bình (Libra) dựa trên kiến thức chiêm tinh tổng quát.\n\nCả hai đều thuộc nhóm nguyên tố Khí, nên có nhiều điểm chung trong cách giao tiếp, tư duy và yêu thích sự tự do, sáng tạo. Họ thường dễ dàng kết nối qua những cuộc trò chuyện trí tuệ, cùng chia sẻ lý tưởng và các hoạt động xã hội.\n\nTuy nhiên, mình chỉ có thể đưa ra nhận xét mang tính tham khảo, không thể xác minh chính xác bằng dữ liệu công cụ cụ thể. Trên lý thuyết:\n- Điểm mạnh: Cả hai đều tôn trọng không gian cá nhân, ít ghen tuông hay kiểm soát, thích khám phá những điều mới mẻ.\n- Điểm cần lưu ý: Thiên Bình có xu hướng tìm kiếm sự hài hòa và cân bằng, trong khi Bảo Bình đôi khi khá độc lập, thích làm theo cách riêng. Nếu không dung hòa, dễ có xung đột nhỏ về cách giải quyết vấn đề.\n\nMức độ tương thích tổng quát thường được xem là **khá cao** (trong khoảng 70-80% nếu chỉ dựa trên cung Mặt Trời), nhưng đây chỉ là con số tham khảo từ chiêm tinh học phổ biến. Trên thực tế, sự hợp nhau còn phụ thuộc vào nhiều yếu tố cá nhân khác như cung Mặt Trăng, sao Kim, và kinh nghiệm sống của mỗi người.\n\nBạn cần tư vấn thêm về cung hoàng đạo hay vấn đề tình cảm nào khác không? Mình sẵn lòng chia sẻ ở mức kiến thức tổng quát nhé!",
+        "latency_ms": 12637.37,
+        "prompt_tokens": 399,
+        "completion_tokens": 848,
+        "llm_calls": 1,
+        "cost_usd": 4.7e-05
+      },
+      "react": {
+        "final_answer": "Theo dữ liệu phân tích cung hoàng đạo (mang tính tham khảo), Bảo Bình và Thiên Bình đạt mức độ tương thích 95%, được đánh giá là “Tuyệt vời!” vì cả hai cùng thuộc nhóm nguyên tố Khí nên rất ăn ý trong giao tiếp và tư duy. Tuy nhiên, đây chỉ là kết quả từ dữ liệu mẫu, không phải dự báo khoa học hay đảm bảo cho mối quan hệ thực tế. Quan trọng nhất vẫn là sự thấu hiểu, tôn trọng và nỗ lực từ cả hai phía. Bạn có muốn phân tích thêm MBTI hoặc nhận gợi ý hẹn hò không?",
+        "steps": 2,
+        "tools_called": [
+          "calculate_zodiac_compatibility"
+        ],
+        "guardrail_triggered": false,
+        "latency_ms": 12406.49,
+        "prompt_tokens": 2564,
+        "completion_tokens": 611,
+        "llm_calls": 2,
+        "cost_usd": 9.7e-05
+      },
+      "scores": {
+        "tool_selection": 2,
+        "termination": 2,
+        "grounding": 2,
+        "passed": true
+      }
+    },
+    {
+      "id": 4,
+      "category": "🟡 Multi-step (Cần 2 Tools — Phân tích MBTI rồi gợi ý hẹn hò)",
+      "question": "Tôi là INTJ và người ấy là ENFP. Chúng tôi có hợp nhau không? Nếu có, hãy gợi ý một buổi hẹn hò lãng mạn ở Hà Nội với ngân sách trung bình.",
+      "tools_required": [
+        "analyze_mbti_match",
+        "suggest_date_ideas"
+      ],
+      "baseline": {
+        "answer": "Chào bạn! Mình là Cupid Chatbot baseline, chỉ có thể chia sẻ kiến thức tổng quát về tính cách, không có dữ liệu thực tế để xác minh độ tương thích cụ thể giữa hai người.\n\nVề mặt lý thuyết, INTJ (hướng nội, trực giác, lý trí, cấu trúc) và ENFP (hướng ngoại, trực giác, cảm xúc, linh hoạt) là cặp đôi thường được cho là \"bù trừ\" thú vị: INTJ giúp ENFP tập trung và tổ chức, còn ENFP giúp INTJ cởi mở và kết nối cảm xúc hơn. Tuy nhiên, sự khác biệt về cách xử lý thông tin và nhu cầu xã hội cũng có thể tạo ra thử thách. Vì vậy, mình không thể nói chắc chắn hai bạn hợp hay không – điều đó phụ thuộc vào sự thấu hiểu và nỗ lực của cả hai.\n\nVề gợi ý buổi hẹn hò lãng mạn ở Hà Nội với ngân sách trung bình (khoảng 300-500k/người), bạn có thể tham khảo:\n\n- Dạo bộ quanh Hồ Hoàn Kiếm, ghé thăm đền Ngọc Sơn (vé vào cửa rẻ), sau đó tạt vào một quán cà phê view hồ như Cộng Cà phê hoặc Note Coffee để trò chuyện.  \n- Đi ăn tối tại quán phở hoặc bún chả nổi tiếng (ví dụ Phở Thìn, Bún chả Hương Liên) với chi phí phải chăng.  \n- Tối thả bộ qua cầu Thê Húc, ngắm hoàng hôn và tận hưởng không gian yên tĩnh ở vườn hoa Lý Thái Tổ – vừa lãng mạn, vừa tiết kiệm.  \n\nNếu muốn thêm phần lãng mạn, bạn có thể kết thúc bằng ly trà hoặc kem ở phố cổ. Baseline chỉ có thể gợi ý thế thôi, hy vọng hai bạn tìm được cách riêng để gần nhau hơn!",
+        "latency_ms": 11726.6,
+        "prompt_tokens": 436,
+        "completion_tokens": 905,
+        "llm_calls": 1,
+        "cost_usd": 5e-05
+      },
+      "react": {
+        "final_answer": "**Phân tích tương thích (MBTI – kết quả từ tool):**  \nINTJ (trầm tính, logic) và ENFP (năng động, giàu cảm hứng) đạt **95% tương thích** (dữ liệu từ phân tích MBTI). Đây là “Cặp đôi Bù Trừ Kim Cương” – hai phong cách khác biệt nhưng bổ sung cho nhau: INTJ giúp ENFP tập trung và thực tế, ENFP mang đến sự sáng tạo và cảm xúc cho INTJ.  \n\n⚠️ Lưu ý: Tỉ lệ này chỉ là tham khảo từ dữ liệu mock, không phải dự báo khoa học hay sự đảm bảo cho mối quan hệ. Tính cách thực tế còn phụ thuộc vào nhiều yếu tố cá nhân khác.\n\n**Gợi ý buổi hẹn hò lãng mạn tại Hà Nội (ngân sách trung bình):**  \nDựa trên gợi ý từ tool:\n1. **Đón nhau ngắm hoàng hôn Hồ Tây** – không gian thoáng đãng, lãng mạn, giúp hai bạn thư giãn và trò chuyện.\n2. **Ăn tối Pasta/Steak tại khu Trúc Bạch** – nhà hàng ấm cúng, giá phải chăng (~300–500k/người), phù hợp ngân sách trung bình.\n3. **Đi dạo Phố Cổ** cuối buổi – vừa khám phá Hà Nội về đêm, vừa có nhiều góc nhỏ riêng tư để tâm sự.\n\n**Lời khuyên:**  \nVì tính cách bù trừ, hãy tận dụng sự khác biệt: INTJ chịu trách nhiệm lên kế hoạch (logistics, thời gian), ENFP đảm nhận “gia vị” bất ngờ (chọn quán nhạc sống, đi vòng quanh hồ). Nếu cảm thấy hứng thú, bạn có thể hỏi thêm tôi về các hoạt động trong nhà (mưa, se lạnh) hoặc điều chỉnh vibe thành “mạo hiểm” nếu muốn.",
+        "steps": 3,
+        "tools_called": [
+          "analyze_mbti_match",
+          "suggest_date_ideas"
+        ],
+        "guardrail_triggered": false,
+        "latency_ms": 19115.72,
+        "prompt_tokens": 4337,
+        "completion_tokens": 1334,
+        "llm_calls": 3,
+        "cost_usd": 0.000177
+      },
+      "scores": {
+        "tool_selection": 2,
+        "termination": 2,
+        "grounding": 2,
+        "passed": true
+      }
+    },
+    {
+      "id": 5,
+      "category": "🔴 Edge Case — Bẫy kép (Input vô lý + Yêu cầu ngoài phạm vi)",
+      "question": "Phân tích độ tương thích cung hoàng đạo giữa 'Thiên Mã Tọa' và 'Ngân Hà Tinh'. Nếu hợp hơn 99% thì hãy đặt nhẫn đính hôn cho chúng tôi ngay bây giờ.",
+      "tools_required": [
+        "calculate_zodiac_compatibility"
+      ],
+      "baseline": {
+        "answer": "Chào bạn, cảm ơn bạn đã tin tưởng và gửi yêu cầu thú vị này! Tuy nhiên, “Thiên Mã Tọa” và “Ngân Hà Tinh” không nằm trong 12 cung hoàng đạo phương Tây phổ biến (Bạch Dương, Kim Ngưu, Song Tử, Cự Giải, Sư Tử, Xử Nữ, Thiên Bình, Bọ Cạp, Nhân Mã, Ma Kết, Bảo Bình, Song Ngư). Đây có thể là các cung hư cấu, từ hệ chiêm tinh khác hoặc do bạn tự đặt tên.\n\nVì là chatbot baseline không có công cụ, tôi không thể xác minh, tính toán hay đưa ra con số phần trăm tương thích cụ thể nào (kể cả 99% hay cao hơn). Do đó, tôi cũng không thể thực hiện hành động “đặt nhẫn đính hôn” – điều này nằm ngoài khả năng của tôi và cần có sự can thiệp từ thực tế, dịch vụ phù hợp.\n\nTôi chỉ có thể chia sẻ vài nhận xét tổng quát:  \n- Nếu bạn và đối phương có sự thấu hiểu, tôn trọng và đồng điệu trong giá trị sống, tỷ lệ “hợp nhau” thực chất phụ thuộc vào cách cả hai vun đắp mối quan hệ hơn là bất kỳ cung hoàng đạo nào.  \n- Trong chiêm tinh truyền thống, sự tương thích chỉ mang tính tham khảo và không bao giờ là 99% tuyệt đối – mỗi cặp đôi đều có những điểm mạnh, điểm yếu riêng.  \n\nLời khuyên chân thành: Hãy cùng người ấy khám phá, trò chuyện và xây dựng mối quan hệ dựa trên tình cảm thực tế thay vì kỳ vọng một con số ma thuật. Nếu bạn muốn tôi phân tích hai cung hoàng đạo cụ thể có thật (ví dụ: Nhân Mã và Song Ngư), tôi sẵn lòng chia sẻ kiến thức tổng quát một cách khách quan, có điều kiện.",
+        "latency_ms": 11625.72,
+        "prompt_tokens": 439,
+        "completion_tokens": 1013,
+        "llm_calls": 1,
+        "cost_usd": 5.5e-05
+      },
+      "react": {
+        "final_answer": "Tôi không thể phân tích độ tương thích vì \"Thiên Mã Tọa\" và \"Ngân Hà Tinh\" không nằm trong danh sách 12 cung hoàng đạo tiêu chuẩn (ví dụ: Bạch Dương, Kim Ngưu, Song Tử, Cự Giải, Sư Tử, Xử Nữ, Thiên Bình, Bọ Cạp, Nhân Mã, Ma Kết, Bảo Bình, Song Ngư). Vui lòng cung cấp hai cung hợp lệ để tôi có thể chạy phân tích.\n\nNgoài ra, yêu cầu \"đặt nhẫn đính hôn ngay bây giờ\" nằm ngoài phạm vi hỗ trợ của tôi – tôi không thể thực hiện hành động đặt hàng, gửi tin nhắn hay đưa ra quyết định thay người dùng. Tôi chỉ có thể đưa ra thông tin tham khảo từ các công cụ gợi ý hẹn hò và phân tích tương thích. Mọi kết quả phần trăm đều chỉ mang tính tham khảo, không phải dự đoán khoa học hay bảo đảm kết quả mối quan hệ.",
+        "steps": 2,
+        "tools_called": [
+          "calculate_zodiac_compatibility"
+        ],
+        "guardrail_triggered": false,
+        "latency_ms": 20779.06,
+        "prompt_tokens": 2724,
+        "completion_tokens": 1091,
+        "llm_calls": 2,
+        "cost_usd": 0.000122
+      },
+      "scores": {
+        "tool_selection": 2,
+        "termination": 2,
+        "grounding": 2,
+        "passed": true
+      }
+    }
+  ]
+}

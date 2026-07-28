@@ -19,8 +19,10 @@
 
 Nhóm chọn đề tài này vì nó buộc hệ thống phải **tra cứu dữ liệu rồi mới quyết định bước tiếp theo** — đúng đặc trưng cần Agent thay vì Chatbot. Bảng Agentic Fit (`docs/trace_eval.md`) chấm **17/20**, trong đó Multi-step Reasoning và Tool Interaction đều đạt 5/5.
 
-- **Success Rate**: `[CHỜ ĐO — điền sau lần chạy nghiệm thu cuối, xem §3]`
+- **Success Rate**: **5/5 test case (100%)** — đo bằng `backend/benchmark.py`, lần chạy `2026-07-28T22:02:31` trên `deepseek-v4-flash`. Không case nào chạm guardrail giới hạn vòng lặp.
 - **Key Outcome**: Trên test case multi-step (TC#4), ReAct Agent gọi đúng **2 tool theo thứ tự phụ thuộc** (`analyze_mbti_match` → `suggest_date_ideas`) và chỉ gợi ý hẹn hò *sau khi* đã có kết quả tương thích. Chatbot baseline trả lời cùng câu hỏi bằng kiến thức chung, nội dung mượt nhưng **không có số liệu kiểm chứng được** và không để lại vết suy luận để audit.
+
+Con số đắt nhất của lần đo: Agent tiêu **3.209 token/task** so với **1.270 token/task** của baseline — đắt hơn **2,5×** để đổi lấy khả năng truy vết và số liệu có căn cứ. Đây là cái giá thật của Agent, và là lý do §5 kết luận không nên đẩy mọi câu hỏi qua Agent.
 
 Khác biệt cốt lõi quan sát được không nằm ở "câu trả lời hay hơn", mà ở **khả năng truy vết**: mọi con số Agent đưa ra đều gắn với một Observation cụ thể từ tool.
 
@@ -91,24 +93,44 @@ Nhóm viết một lớp adapter đa nhà cung cấp ([`src/providers.py:287-302
 | Latency mỗi request | ✅ Đã instrument | `execution_time_ms` tại [`server.py:143`](../../server.py#L143) |
 | Latency Cấp 1 (rule-based) | ✅ Đã có assertion | [`backend/verify_levels.py:88-93`](../../backend/verify_levels.py#L88-L93) — khẳng định `< 0.5s`, đủ chứng minh **không** có API call tới LLM |
 | Số bước ReAct / lần chạm guardrail | ✅ Đã ghi | `total_steps`, `guardrail_triggered` trong payload trả về của `execute_full_flow()` |
-| Token per task | ❌ Chưa instrument | Provider adapter chưa đọc `usage` từ response |
-| Cost | ❌ Chưa instrument | Phụ thuộc token count ở trên |
+| Token per task | ✅ Đã instrument | `BaseLLMProvider._record_usage()` chuẩn hoá `usage` của cả 5 SDK về một dict chung — [`src/providers.py:13-52`](../../src/providers.py#L13-L52) |
+| Cost | ✅ Đã instrument | Bảng đơn giá `PRICING` trong [`backend/benchmark.py`](../../backend/benchmark.py) |
 
 ### 3.2 Số liệu lần chạy nghiệm thu
 
-> [!IMPORTANT]
-> Các ô dưới đây **cố ý để trống** cho tới khi chạy `python src/app.py` trên đủ 5 test case ở lần nghiệm thu cuối. Nhóm không điền số ước lượng để tránh báo cáo sai lệch.
+Chạy bằng `python backend/benchmark.py` — script bọc provider thật để đếm từng lượt gọi LLM mà **không sửa vòng lặp ReAct**, nên số đo phản ánh đúng code trong `src/app.py`. Log đầy đủ: `logs/benchmark_20260728_220231.json`.
 
-- **Average Latency (P50)**: `[CHỜ ĐO]` ms
-- **Max Latency (P99)**: `[CHỜ ĐO]` ms
-- **Average Tokens per Task**: `[CHỜ ĐO]` — cần bổ sung đọc `usage` trong `src/providers.py` trước
-- **Total Cost of Test Suite**: `[CHỜ ĐO]`
+**Model**: `deepseek-v4-flash` | **Thời điểm**: 2026-07-28 22:02:31 | **Cỡ mẫu**: 5 test case × 2 nhánh
 
-### 3.3 Việc cần làm để hoàn thiện dashboard
+| Chỉ số | ReAct Agent | Chatbot Baseline |
+| :--- | ---: | ---: |
+| Average Latency (P50) | **12.406 ms** | 11.626 ms |
+| Max Latency (P99) | **20.779 ms** | 12.637 ms |
+| Mean Latency | 12.604 ms | — |
+| Average Tokens per Task | **3.208,6** | 1.270,4 |
+| Total Cost | $0,000504 | $0,000238 |
 
-1. Đọc `response.usage.prompt_tokens / completion_tokens` trong từng provider class, gắn vào giá trị trả về.
-2. Cộng dồn theo task rồi nhân đơn giá `deepseek-v4-flash` để ra cost.
-3. Ghi mỗi lần chạy xuống `logs/YYYY-MM-DD.jsonl` để tính được P50/P99 thay vì chỉ có 1 mẫu.
+- **Total Cost of Test Suite**: **$0,000742** (cả 2 nhánh, 5 case)
+- **Success Rate**: **5/5 (100%)**, không case nào chạm `MAX_ITERATIONS`
+
+### 3.3 Chi tiết từng test case
+
+| # | Loại | Tool đã gọi | Steps | Guardrail | Latency | Token | Pass |
+| :-: | :-- | :-- | :-: | :-: | --: | --: | :-: |
+| 1 | 🟢 Đơn giản | — | 1 | — | 6.106 ms | 1.765 | ✅ |
+| 2 | 🟢 Đơn giản | — | 1 | — | 4.611 ms | 1.617 | ✅ |
+| 3 | 🟡 Single-step | `calculate_zodiac_compatibility` | 2 | — | 12.406 ms | 3.175 | ✅ |
+| 4 | 🟡 Multi-step | `analyze_mbti_match` → `suggest_date_ideas` | 3 | — | 19.116 ms | 5.671 | ✅ |
+| 5 | 🔴 Edge case | `calculate_zodiac_compatibility` | 2 | — | 20.779 ms | 3.815 | ✅ |
+
+**Đọc số này ra được 3 điều:**
+
+1. **Số bước tỉ lệ đúng với độ khó.** TC#1/#2 dừng ở 1 step (không gọi tool), TC#3/#5 ở 2 step (1 tool), TC#4 ở 3 step (2 tool). Agent không lãng phí vòng lặp — đây là kết quả trực tiếp của bản vá nhận diện Final Answer ở §5 Experiment 2.
+2. **Chi phí tăng phi tuyến theo số tool.** TC#4 tốn 5.671 token, gấp ~3,5× TC#2 (1.617), vì mỗi vòng lặp phải gửi lại toàn bộ context tích luỹ. Đây là đặc tính cần lưu ý khi scale số bước.
+3. **TC#5 chậm nhất (20.779 ms) dù chỉ 2 step** — do câu trả lời từ chối phải liệt kê đủ 12 cung hợp lệ nên completion dài. Latency của Agent phụ thuộc độ dài output nhiều hơn số vòng lặp.
+
+> [!NOTE]
+> Cỡ mẫu 5 case nên P99 thực chất là giá trị lớn nhất, không phải phân vị thống kê đáng tin. Muốn có P99 thật cần chạy lặp nhiều lần và gộp log — `benchmark.py` đã ghi sẵn JSON theo timestamp để cộng dồn về sau.
 
 ---
 
@@ -153,18 +175,44 @@ So sánh hai revision thật của `src/prompts.py`: `e6b8c61` (v1) → `4ca8d81
 | 2 | Thêm: *"Không thực hiện các yêu cầu ngoài registry (đặt nhẫn, đặt lịch, gửi tin nhắn); từ chối ngắn gọn vì ngoài phạm vi"* | Bẫy out-of-scope ở TC#5 |
 | 3 | Siết baseline: *"Tuyệt đối không sinh Thought, Action hoặc Observation; không giả lập kết quả của bất kỳ công cụ nào"* | Chatbot baseline giả vờ đã gọi tool → làm hỏng phép so sánh với Agent |
 
-- **Result**: TC#4 sau v2 chạy đúng thứ tự 2 tool; TC#5 Agent từ chối hành động "đặt nhẫn đính hôn" thay vì tìm cách đáp ứng. Mức giảm lỗi định lượng: `[CHỜ ĐO — cần chạy lại bộ 5 case trên cả 2 revision]`.
+- **Result**: Lần đo 2026-07-28 xác nhận cả 3 thay đổi đều đạt mục tiêu — TC#4 chạy đúng thứ tự `analyze_mbti_match` → `suggest_date_ideas` trong 3 step; TC#5 Agent từ chối hành động "đặt nhẫn đính hôn" thay vì tìm cách đáp ứng; baseline không sinh Thought/Action ở bất kỳ case nào.
 
-### Experiment 2 (Bonus): Chatbot vs Agent
+> [!NOTE]
+> Nhóm **không** chạy lại bộ test trên revision v1 để lấy con số "giảm bao nhiêu %". Kết quả trên là quan sát hành vi sau v2, không phải phép đo A/B đối chứng — ghi rõ để tránh hiểu nhầm mức độ chặt chẽ của thí nghiệm.
+
+### Experiment 2: Bản vá nhận diện Final Answer
+
+Đây là ablation **có số đo đối chứng rõ ràng nhất** của nhóm.
+
+- **Diff**: Điều kiện dừng của vòng lặp đổi từ so khớp chuỗi cứng `if "Final Answer:" in llm_output` sang regex `FINAL_RE = re.compile(r'Final\s*(?:Answer)?\s*:', re.IGNORECASE)`, cộng thêm heuristic `_looks_like_answer()` bắt trường hợp LLM quên hẳn nhãn.
+- **Nguyên nhân**: model `deepseek-v4-flash` thường viết tắt `Final Answer:` thành `Final:`. Chuỗi cứng không khớp → loop không nhận ra đã có câu trả lời → quay đủ 4 vòng rồi rơi guardrail.
+- **Result (A/B đối chứng, cùng model)**:
+
+  | Test case | Điều kiện cũ | Sau vá |
+  | :--- | :-: | :-: |
+  | TC#1 — yếu tố mối quan hệ lành mạnh | 2 step | **1 step** |
+  | TC#2 — vì sao MBTI được dùng xét hợp nhau | 2 step | **1 step** |
+
+  Bản vá **cắt một nửa số lần gọi LLM** cho nhóm câu hỏi không cần tool. Lần chạy đủ 5 case sau vá: **5/5 pass, 0/5 chạm `MAX_ITERATIONS`**.
+
+- **Phát hiện ngoài dự kiến**: model **không nhất quán** về nhãn — cùng một câu hỏi, có lượt nó viết đúng `Final Answer:`, có lượt không viết nhãn nào. Nên điều kiện cũ đôi khi vẫn chạy đúng. Nhóm ghi rõ điều này thay vì khẳng định "trước vá luôn hỏng": bug không tái hiện ổn định, và đó chính là lý do nó sống sót qua nhiều lần test tay.
+- **Bài học**: không đặt điều kiện dừng của vòng lặp lên một chuỗi khớp chính xác do LLM sinh ra — kể cả khi prompt đã quy định rõ định dạng.
+
+### Experiment 3 (Bonus): Chatbot vs Agent
 
 | Case | Chatbot Result | Agent Result | Winner |
 | :--- | :--- | :--- | :--- |
-| TC#1 — Yếu tố của mối quan hệ lành mạnh (đơn giản) | Đúng, tự nhiên, không cần tool | Đúng, nhưng tốn thêm 1 vòng suy luận | **Draw** (Chatbot rẻ hơn) |
-| TC#3 — Bảo Bình × Thiên Bình (single-step) | Chung chung, không có số liệu | `[CHỜ TRACE]` | `[CHỜ TRACE]` |
+| TC#1 — Yếu tố của mối quan hệ lành mạnh (đơn giản) | Đúng, tự nhiên — **925 token** | Đúng, cùng chất lượng, 1 step — **1.765 token** | **Chatbot** — Agent đắt gấp 1,9× mà không hơn gì |
+| TC#2 — Vì sao MBTI được dùng để xét hợp nhau (đơn giản) | Đúng — **1.387 token** | Đúng, 1 step, không gọi tool — **1.617 token** | **Draw** (Chatbot rẻ hơn chút) |
+| TC#3 — Bảo Bình × Thiên Bình (single-step) | *"chỉ có thể đưa ra nhận xét mang tính tham khảo, **không thể xác minh chính xác bằng dữ liệu công cụ cụ thể**"* | Gọi `calculate_zodiac_compatibility` → trả **95% "Tuyệt vời!"**, kèm cảnh báo đây là dữ liệu mẫu không phải dự báo khoa học | **Agent** |
 | TC#4 — INTJ × ENFP + gợi ý hẹn hò (multi-step) | Trả lời mượt nhưng **không có căn cứ kiểm chứng** | Gọi đúng 2 tool theo thứ tự, kết luận gắn với Observation | **Agent** |
-| TC#5 — Cung bịa + đòi đặt nhẫn (edge case) | Từ chối an toàn, nhưng không xác minh được gì | Gọi tool → tool chặn input sai → từ chối đúng cả 2 vế của bẫy | **Agent** |
+| TC#5 — Cung bịa + đòi đặt nhẫn (edge case) | Từ chối an toàn, nhưng không xác minh được gì | Gọi tool → tool chặn input sai → từ chối đúng cả 2 vế của bẫy, có liệt kê 12 cung hợp lệ để người dùng sửa | **Agent** |
 
-**Kết luận**: Agent **không** thắng ở mọi mặt trận. Với câu hỏi kiến thức thuần (TC#1, TC#2), Chatbot cho kết quả tương đương mà nhanh và rẻ hơn hẳn — đây chính là lý do nhóm thiết kế **Hybrid Flowchart** ([`docs/hybrid_flowchart.mermaid`](../../docs/hybrid_flowchart.mermaid)) để phân luồng thay vì đẩy mọi câu hỏi qua Agent.
+TC#3 là minh hoạ sạch nhất cho khác biệt giữa 2 kiến trúc: cùng một câu hỏi, baseline **tự thừa nhận không xác minh được**, còn Agent đưa ra con số 95% kèm nguồn gốc. Điểm đáng khen là Agent vẫn giữ được sự trung thực — nó gọi kết quả là *"dữ liệu mẫu, không phải dự báo khoa học"* thay vì trình bày như chân lý.
+
+**Kết luận**: Agent **không** thắng ở mọi mặt trận, và số đo chứng minh điều đó rõ hơn cảm nhận. Với câu hỏi kiến thức thuần (TC#1, TC#2), Chatbot cho kết quả tương đương mà tốn **925–1.387 token** so với **1.617–1.765 token** của Agent — riêng TC#1 Agent đắt gấp **1,9×** mà chất lượng không hơn. Chênh lệch này còn giãn rộng khi phải gọi tool: TC#4 Agent tốn 5.671 token so với 1.341 của baseline, tức **4,2×**.
+
+Đây chính là lý do nhóm thiết kế **Hybrid Flowchart** ([`docs/hybrid_flowchart.mermaid`](../../docs/hybrid_flowchart.mermaid)) để phân luồng thay vì đẩy mọi câu hỏi qua Agent: câu hỏi kiến thức đi đường Chatbot, câu cần dữ liệu mới trả giá cho Agent.
 
 ---
 
@@ -196,7 +244,7 @@ Có script tự kiểm chứng guardrail: `backend/verify_guardrails.py` và `ba
 - **Hiệu năng**: gọi tool bất đồng bộ (`asyncio`) cho các bước độc lập; hiện Web UI đã dùng **SSE streaming** nên người dùng thấy từng bước Thought/Action ngay thay vì chờ trọn vòng lặp.
 - **Nhiều tool**: khi vượt ~20 tool, nhét toàn bộ mô tả vào system prompt sẽ tốn token và giảm độ chính xác chọn tool → dùng **Vector DB retrieve top-k tool** liên quan rồi mới đưa vào prompt.
 - **Bộ nhớ**: `backend/memory_store.json` hiện là file phẳng, đủ cho demo nhưng cần chuyển sang Redis/Postgres khi có nhiều session đồng thời (hiện đã có `threading.Lock` chống race condition — `backend/memory.py:22`).
-- **Observability**: bổ sung ghi log JSONL + token/cost như §3.3 để có dashboard thật thay vì đo thủ công.
+- **Observability**: đã có `backend/benchmark.py` ghi log JSON kèm token/cost cho mỗi lần chạy. Bước tiếp theo là gọi nó trong CI để phát hiện hồi quy — ví dụ nếu một thay đổi prompt làm số step trung bình tăng lên, log sẽ chỉ ra ngay thay vì phải chờ ai đó tình cờ nhận ra.
 
 ---
 
