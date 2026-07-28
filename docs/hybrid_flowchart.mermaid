@@ -1,0 +1,40 @@
+flowchart TD
+    A[Người dùng nhập câu hỏi] --> B{Câu hỏi chỉ cần kiến thức chung?}
+
+    B -->|Có| C[Chatbot Baseline]
+    C --> C1[Trả lời bằng kiến thức tổng quát]
+    C1 --> C2[Không gọi tool]
+    C2 --> Z[Kết thúc]
+
+    B -->|Không| D{Có cần phân tích cụ thể\nhoặc gọi tool không?}
+
+    D -->|Có| E[ReAct Agent]
+    E --> F[Thought: xác định cần làm gì]
+    F --> G[Action: gọi tool phù hợp]
+    G --> H[Observation: nhận kết quả từ tool]
+
+    H --> I{Đã đủ dữ liệu để trả lời chưa?}
+    I -->|Chưa| F
+    I -->|Rồi| J[Final Answer: kết luận + giải thích]
+    J --> Z
+
+    G --> K{Tool lỗi / input vô lý /\nyêu cầu ngoài phạm vi?}
+    K -->|Có| L[Safe Fallback hoặc từ chối lịch sự]
+    L --> Z
+
+    subgraph Chatbot_Path [Chatbot Path]
+        C
+        C1
+        C2
+    end
+
+    subgraph ReAct_Path [ReAct Agent Path]
+        E
+        F
+        G
+        H
+        I
+        J
+        K
+        L
+    end
