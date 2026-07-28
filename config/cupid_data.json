@@ -1,0 +1,233 @@
+{
+  "_metadata": {
+    "project": "Cupid Agent — Trợ Lý Ghép Đôi & Phân Tích Độ Tương Thích",
+    "version": "1.0.0",
+    "designed_by": "Role 1 — Product Architect",
+    "note": "Đây là mock database dùng cho src/tools.py. Role 2 đọc file này để implement các hàm tool. ID hợp lệ: U001–U010. Các ID khác (U999, U000, v.v.) sẽ trả về lỗi."
+  },
+
+  "users": {
+    "U001": {
+      "id": "U001",
+      "name": "Nguyễn Minh Anh",
+      "age": 26,
+      "gender": "Nữ",
+      "location": "Hà Nội",
+      "occupation": "Kỹ sư phần mềm",
+      "interests": ["đọc sách", "hiking", "nấu ăn", "du lịch bụi"],
+      "personality_type": "INFJ",
+      "relationship_goal": "Mối quan hệ lâu dài, nghiêm túc",
+      "dealbreakers": ["hút thuốc", "không có định hướng tương lai"],
+      "bio": "Yêu thiên nhiên và những buổi tối thứ 6 bình yên bên một cuốn sách. Tìm người có thể cùng nhau xây dựng cuộc sống ổn định."
+    },
+    "U002": {
+      "id": "U002",
+      "name": "Trần Việt Hoàng",
+      "age": 28,
+      "gender": "Nam",
+      "location": "TP. Hồ Chí Minh",
+      "occupation": "Product Manager",
+      "interests": ["thể thao", "công nghệ", "cà phê", "phim tài liệu"],
+      "personality_type": "ENTJ",
+      "relationship_goal": "Tìm bạn đồng hành chia sẻ đam mê và phát triển cùng nhau",
+      "dealbreakers": ["thiếu tham vọng", "không tôn trọng thời gian cá nhân"],
+      "bio": "Sống có mục tiêu, thích thử thách bản thân mỗi ngày. Tìm người có thể cùng nhau chinh phục những điều lớn hơn."
+    },
+    "U003": {
+      "id": "U003",
+      "name": "Lê Phương Thảo",
+      "age": 24,
+      "gender": "Nữ",
+      "location": "Đà Nẵng",
+      "occupation": "Giáo viên tiểu học",
+      "interests": ["âm nhạc", "yoga", "làm vườn", "tình nguyện xã hội"],
+      "personality_type": "ISFJ",
+      "relationship_goal": "Xây dựng gia đình, tìm người có giá trị sống tương đồng",
+      "dealbreakers": ["thiếu ổn định cảm xúc", "không chia sẻ về bản thân"],
+      "bio": "Tin vào sức mạnh của sự quan tâm nhỏ hàng ngày. Tìm người biết lắng nghe và trân trọng những điều giản dị."
+    },
+    "U004": {
+      "id": "U004",
+      "name": "Phạm Đức Thịnh",
+      "age": 30,
+      "gender": "Nam",
+      "location": "Hà Nội",
+      "occupation": "Bác sĩ nội khoa",
+      "interests": ["chạy bộ", "đọc sách y khoa", "nấu ăn", "trekking"],
+      "personality_type": "INTJ",
+      "relationship_goal": "Mối quan hệ nghiêm túc, tìm người hiểu giá trị của sự cống hiến",
+      "dealbreakers": ["không trung thực", "quá phụ thuộc cảm xúc"],
+      "bio": "Dành phần lớn cuộc đời để chữa lành người khác, nay muốn tìm người chữa lành chính mình."
+    },
+    "U005": {
+      "id": "U005",
+      "name": "Hoàng Bảo Châu",
+      "age": 25,
+      "gender": "Nữ",
+      "location": "Hà Nội",
+      "occupation": "Nhà thiết kế đồ họa",
+      "interests": ["hội họa", "photography", "đọc sách", "cà phê specialty"],
+      "personality_type": "INFP",
+      "relationship_goal": "Tìm người kết nối ở chiều sâu, không cần nhiều lời",
+      "dealbreakers": ["ồn ào, hời hợt", "không tôn trọng không gian sáng tạo"],
+      "bio": "Thế giới bên trong tôi rộng hơn người ngoài nghĩ. Tìm ai đó đủ kiên nhẫn để khám phá."
+    },
+    "U006": {
+      "id": "U006",
+      "name": "Nguyễn Thanh Tùng",
+      "age": 27,
+      "gender": "Nam",
+      "location": "TP. Hồ Chí Minh",
+      "occupation": "Kỹ sư xây dựng",
+      "interests": ["bóng đá", "game", "ẩm thực đường phố", "đi phượt"],
+      "personality_type": "ESTP",
+      "relationship_goal": "Tận hưởng hiện tại, xem có hợp nhau không đã",
+      "dealbreakers": ["quá cứng nhắc", "không có khiếu hài hước"],
+      "bio": "Sống hết mình với hiện tại. Không cần kế hoạch xa — chỉ cần người bên cạnh biết cười."
+    },
+    "U007": {
+      "id": "U007",
+      "name": "Vũ Thị Lan Hương",
+      "age": 29,
+      "gender": "Nữ",
+      "location": "Hà Nội",
+      "occupation": "Luật sư",
+      "interests": ["đọc sách luật và tiểu thuyết", "bơi lội", "du lịch văn hóa", "thiền"],
+      "personality_type": "ISTJ",
+      "relationship_goal": "Mối quan hệ ổn định, cùng định hướng phát triển gia đình",
+      "dealbreakers": ["thiếu trách nhiệm", "không trung thực", "không tôn trọng sự riêng tư"],
+      "bio": "Tôi tin vào cam kết và sự nhất quán. Tìm người có nền tảng vững chắc để cùng nhau xây dựng tương lai."
+    },
+    "U008": {
+      "id": "U008",
+      "name": "Đỗ Quang Minh",
+      "age": 31,
+      "gender": "Nam",
+      "location": "Hà Nội",
+      "occupation": "Giảng viên đại học",
+      "interests": ["nghiên cứu khoa học", "cờ vua", "đọc sách", "du lịch lịch sử"],
+      "personality_type": "INTP",
+      "relationship_goal": "Tìm người có thể cùng trò chuyện về mọi thứ, từ lý thuyết đến cuộc sống",
+      "dealbreakers": ["không có tư duy phản biện", "đề cao vật chất quá mức"],
+      "bio": "Cuộc trò chuyện tốt là cách hẹn hò tốt nhất. Tìm người cùng thích khám phá ý tưởng hơn là check-in."
+    },
+    "U009": {
+      "id": "U009",
+      "name": "Bùi Thị Mai Linh",
+      "age": 23,
+      "gender": "Nữ",
+      "location": "TP. Hồ Chí Minh",
+      "occupation": "Marketing Executive",
+      "interests": ["networking", "fitness", "podcasts", "du lịch luxury"],
+      "personality_type": "ESFJ",
+      "relationship_goal": "Xây dựng mối quan hệ bền vững, tìm chỗ dựa tinh thần",
+      "dealbreakers": ["cô lập xã hội", "không có sự nghiệp rõ ràng"],
+      "bio": "Năng lượng tích cực là ngôn ngữ của tôi. Tìm ai đó cùng sống tươi vui và biết khi nào cần nghiêm túc."
+    },
+    "U010": {
+      "id": "U010",
+      "name": "Cao Hữu Nghĩa",
+      "age": 32,
+      "gender": "Nam",
+      "location": "Hà Nội",
+      "occupation": "Doanh nhân startup",
+      "interests": ["công nghệ", "đầu tư", "leo núi", "nấu ăn theo công thức mới"],
+      "personality_type": "ENTP",
+      "relationship_goal": "Tìm người cùng chí hướng, dám mơ lớn và hành động",
+      "dealbreakers": ["tư duy tiêu cực", "sợ thay đổi", "không chịu học hỏi"],
+      "bio": "Tôi không tìm người hoàn hảo — tôi tìm người cùng tôi phát triển mỗi ngày."
+    }
+  },
+
+  "compatibility_matrix": {
+    "U007-U004": {
+      "score": 88,
+      "strengths": [
+        "Cùng ở Hà Nội — thuận tiện gặp gỡ",
+        "Cả hai đều hướng nội và trọng sự nghiêm túc trong cam kết",
+        "Cùng yêu thích đọc sách và trekking/du lịch thiên nhiên",
+        "Personality ISTJ + INTJ: rất tương thích về tư duy logic và cấu trúc"
+      ],
+      "concerns": [
+        "Cả hai đều bận rộn với nghề nghiệp đòi hỏi cao — cần thỏa thuận về quality time",
+        "U004 có xu hướng độc lập cao, U007 cần sự ổn định — cần giao tiếp rõ kỳ vọng"
+      ],
+      "recommendation": "Rất tiềm năng. Gợi ý bắt đầu bằng buổi cà phê trao đổi về định hướng cuộc sống."
+    },
+    "U007-U008": {
+      "score": 82,
+      "strengths": [
+        "Cùng ở Hà Nội",
+        "Cả hai đều trọng chiều sâu tư duy và thích đọc sách",
+        "ISTJ + INTP: bổ trợ nhau — U007 mang sự ổn định, U008 mang sự sáng tạo tư duy",
+        "Cùng thích du lịch có chiều sâu văn hóa/lịch sử"
+      ],
+      "concerns": [
+        "U008 có thể quá trừu tượng/học thuật, U007 thực tế hơn — cần cân bằng",
+        "Cả hai đều không giỏi bày tỏ cảm xúc — cần nỗ lực giao tiếp"
+      ],
+      "recommendation": "Tiềm năng tốt. Thử bắt đầu bằng buổi tham quan bảo tàng hoặc sự kiện văn hóa."
+    },
+    "U007-U001": {
+      "score": 74,
+      "strengths": [
+        "Cùng ở Hà Nội",
+        "Cùng trọng mối quan hệ lâu dài nghiêm túc",
+        "Cùng yêu thích đọc sách và du lịch"
+      ],
+      "concerns": [
+        "Personality ISTJ + INFJ: U001 cần nhiều không gian cảm xúc hơn U007 thường cung cấp",
+        "U001 nhạy cảm hơn, U007 trực tiếp hơn — cần điều chỉnh phong cách giao tiếp"
+      ],
+      "recommendation": "Có thể phát triển tốt nếu cả hai sẵn sàng hiểu khác biệt phong cách giao tiếp."
+    },
+    "U007-U002": {
+      "score": 61,
+      "strengths": [
+        "Cả hai đều có sự nghiệp rõ ràng và tham vọng",
+        "Cùng coi trọng trách nhiệm và cam kết"
+      ],
+      "concerns": [
+        "Khác thành phố (Hà Nội vs TP.HCM) — thách thức logistics lớn",
+        "ISTJ + ENTJ: cả hai đều muốn kiểm soát — xung đột tiềm ẩn về quyết định",
+        "Sở thích khá khác nhau (U002 hướng ngoại, U007 hướng nội)"
+      ],
+      "recommendation": "Phù hợp trung bình. Nếu một bên sẵn sàng di chuyển thành phố thì mới nên xem xét nghiêm túc."
+    }
+  },
+
+  "match_results": {
+    "U007": {
+      "ranked_matches": [
+        {
+          "rank": 1,
+          "user_id": "U004",
+          "compatibility_score": 88,
+          "match_reason": "Cùng tính cách hướng nội, cam kết lâu dài, cùng Hà Nội, sở thích tương đồng"
+        },
+        {
+          "rank": 2,
+          "user_id": "U008",
+          "compatibility_score": 82,
+          "match_reason": "Cùng trọng chiều sâu, cùng Hà Nội, tính cách bổ trợ ISTJ-INTP"
+        },
+        {
+          "rank": 3,
+          "user_id": "U001",
+          "compatibility_score": 74,
+          "match_reason": "Cùng mục tiêu quan hệ dài hạn, cùng Hà Nội, sở thích giao thoa"
+        },
+        {
+          "rank": 4,
+          "user_id": "U002",
+          "compatibility_score": 61,
+          "match_reason": "Cùng tham vọng nhưng khác thành phố và phong cách sống"
+        }
+      ]
+    }
+  },
+
+  "invalid_users": {
+    "note": "Các ID không có trong danh sách 'users' (U001–U010) đều là INVALID. Tool phải trả về chuỗi lỗi, không crash. Ví dụ: U000, U999, U011, U-1, '', null."
+  }
+}
