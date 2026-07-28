@@ -4,17 +4,9 @@ Hỗ trợ chuyển đổi linh hoạt giữa các nhà cung cấp AI chỉ bằ
 """
 
 import os
-import sys
 import json
 import requests
 from dotenv import load_dotenv
-
-# Đảm bảo in ra Tiếng Việt và Emojis không bị lỗi trên Windows Console
-if sys.stdout.encoding != 'utf-8':
-    try:
-        sys.stdout.reconfigure(encoding='utf-8')
-    except Exception:
-        pass
 
 load_dotenv()
 
@@ -160,22 +152,78 @@ class OpenRouterProvider(BaseLLMProvider):
 
 
 class MockProvider(BaseLLMProvider):
-    """Offline Mock Provider — Giả lập ReAct trace cho Cupid Agent (không cần API key)"""
+    """Offline Mock Provider — Giả lập phản hồi cho Cupid Agent (không cần API key).
+    
+    Hỗ trợ 2 chế độ:
+    - mode='baseline': trả lời plain text như Chatbot thực sự (không có Thought/Action)
+    - mode='agent' (mặc định): trả Thought -> Action -> Final Answer theo luồng ReAct
+    
+    Chế độ được chọn qua tham số system_prompt: nếu system_prompt chứa chuỗi
+    'BASELINE KHÔNG CÓ TOOL' thì mock trả lời kiểu chatbot.
+    """
 
-    def generate(self, prompt: str, system_prompt: str = "") -> str:
-        text = prompt.lower()
+    def _is_baseline(self, system_prompt: str) -> bool:
+        """Kiểm tra xem lệnh gọi này là baseline hay agent dựa vào system_prompt."""
+        return "BASELINE KHÔNG CÓ TOOL" in system_prompt
+
+    def _mock_baseline(self, text: str) -> str:
+        """Phản hồi plain text cho Chatbot Baseline — không có Thought/Action."""
+        if "mối quan hệ lành mạnh" in text:
+            return (
+                "Một mối quan hệ lành mạnh và bền vững cần: (1) Tôn trọng lẫn nhau, "
+                "(2) Giao tiếp cởi mở và trung thực, (3) Tin tưởng và chung thủy, "
+                "(4) Hỗ trợ nhau phát triển bản thân, (5) Tôn trọng không gian cá nhân. "
+                "Đây là những nền tảng cốt lõi mà bất kỳ mối quan hệ nào cũng cần có."
+            )
+        if "mbti lại quan trọng" in text:
+            return (
+                "MBTI được nhiều người dùng vì nó cung cấp ngôn ngữ chung để hiểu "
+                "phong cách giao tiếp và xử lý cảm xúc của nhau. Tuy nhiên, mình xin lưu ý: "
+                "MBTI chỉ là công cụ tham khảo, không phải định mệnh — hai người "
+                "với bất kỳ loại tính cách nào đều có thể xây dựng mối quan hệ tốt "
+                "nếu cùng cố gắng thấu hiểu và tôn trọng nhau."
+            )
+        if "bảo bình" in text and "thiên bình" in text:
+            return (
+                "Bảo Bình và Thiên Bình thường được xem là cặp tương thích khá tốt vì "
+                "cả hai đều thuộc nhóm Khí và đề cao tư duy lý trí. Tuy nhiên mình không "
+                "có công cụ tra cứu để cho bạn con số cụ thể — đây chỉ là nhận xét tổng quát."
+            )
+        if "intj" in text and "enfp" in text:
+            return (
+                "INTJ và ENFP là cặp tính cách đối cực nhau theo nhiều chiều, và điều đó "
+                "có thể tạo ra sức hút đáng kể. Tuy nhiên, mình không thể xác minh mức độ "
+                "tương thích bằng dữ liệu công cụ — chỉ có thể nói rằng sự bổ trợ giữa "
+                "lý trí (INTJ) và cảm hứng (ENFP) có tiềm năng tốt nếu cả hai chịu thấu hiểu nhau. "
+                "Về gợi ý hẹn hò, bạn có thể thử cà phê yên tĩnh, tham quan bảo tàng "
+                "hoặc đi dạo bờ hồ tại Hà Nội."
+            )
+        if "thiên mã tọa" in text or "ngân hà tinh" in text:
+            return (
+                "'Thiên Mã Tọa' và 'Ngân Hà Tinh' không phải cung hoàng đạo tiêu chuẩn, "
+                "nên mình không thể phân tích tương thích. Và dù kết quả thế nào, "
+                "mình cũng không thể đặt nhẫn đính hôn — đó là quyết định thuộc về con người, "
+                "không phải chatbot."
+            )
+        return (
+            "Chào bạn! Mình là Cupid Chatbot — sẵn sàng tư vấn tình cảm và "
+            "độ tương thích ở mức kiến thức tổng quát. Bạn muốn hỏi về điều gì?"
+        )
+
+    def _mock_agent(self, text: str) -> str:
+        """Phản hồi Thought -> Action / Final Answer cho ReAct Agent."""
         obs_count = text.count("observation:")
 
         # TC-1 & TC-2: Câu hỏi tổng quát -> Final Answer ngay
         if "mối quan hệ lành mạnh" in text or "mbti lại quan trọng" in text:
             return (
-                "Thought: Đây là câu hỏi tổng quát, trả lời từ kiến thức có sẵn, không cần tool.\n"
+                "Thought: Đây là câu hỏi tổng quát, không cần gọi tool.\n"
                 "Final Answer: Một mối quan hệ lành mạnh cần: (1) Tôn trọng lẫn nhau, "
                 "(2) Giao tiếp cởi mở và trung thực, (3) Tin tưởng và chung thủy, "
                 "(4) Hỗ trợ nhau phát triển, (5) Tôn trọng không gian cá nhân."
             )
 
-        # TC-3: Tương thích cung hoàng đạo Bảo Bình - Thiên Bình -> 1 tool
+        # TC-3: Tương thích cung hoàng đạo Bảo Bình - Thiên Bình
         if "bảo bình" in text and "thiên bình" in text:
             if obs_count == 0:
                 return (
@@ -188,7 +236,7 @@ class MockProvider(BaseLLMProvider):
                 "cùng hệ Khí, giao tiếp cực kỳ ăn ý. Cặp đôi cực kỳ tiềm năng!"
             )
 
-        # TC-4: MBTI INTJ + ENFP -> 2 tools theo thứ tự
+        # TC-4: MBTI INTJ + ENFP -> 2 tools theo thứ tự bắt buộc
         if "intj" in text and "enfp" in text:
             if obs_count == 0:
                 return (
@@ -203,19 +251,20 @@ class MockProvider(BaseLLMProvider):
             return (
                 "Thought: Đã có đủ Observation từ cả 2 tool. Tổng hợp.\n"
                 "Final Answer: INTJ và ENFP là Cặp đôi Kim Cương — 95% tương thích! "
-                "Kịch bản hẹn hò lãng mạn tại Hà Nội: Ngắm hoàng hôn Hồ Tây → Ăn tối Pasta tại Trúc Bạch → Đi dạo Phố Cổ."
+                "Kịch bản hẹn hò lãng mạn tại Hà Nội: Ngắm hoàng hôn Hồ Tây → "
+                "Ăn tối Pasta/Steak tại Trúc Bạch → Đi dạo Phố Cổ."
             )
 
         # TC-5: Cung bịa đặt + action out-of-scope
         if "thiên mã tọa" in text or "ngân hà tinh" in text:
             if obs_count == 0:
                 return (
-                    'Thought: Phải gọi tool để kiểm tra, không tự bịa kết quả.\n'
+                    'Thought: Phải gọi tool để kiểm tra dữ liệu, không tự bịa kết quả.\n'
                     'Action: calculate_zodiac_compatibility({"zodiac_1": "Thiên Mã Tọa", "zodiac_2": "Ngân Hà Tinh"})'
                 )
             return (
-                "Thought: Tool trả fallback vì hai cung không chuẩn. "
-                "Yêu cầu đặt nhẫn nằm ngoài phạm vi hệ thống — tôi không có tool này.\n"
+                "Thought: Tool trả kết quả fallback vì hai cung không chuẩn. "
+                "Yêu cầu đặt nhẫn nằm ngoài phạm vi hệ thống — không có tool này.\n"
                 "Final Answer: 'Thiên Mã Tọa' và 'Ngân Hà Tinh' không phải cung hoàng đạo hợp lệ. "
                 "Vui lòng cung cấp cung đúng (ví dụ: Bảo Bình, Sư Tử…). "
                 "Tôi không thể đặt nhẫn đính hôn — đó là quyết định của con người 💍"
@@ -227,6 +276,12 @@ class MockProvider(BaseLLMProvider):
             "Final Answer: 🤖 Tôi là Cupid Agent! Hỏi tôi về độ tương thích "
             "cung hoàng đạo, MBTI hoặc gợi ý hẹn hò nhé!"
         )
+
+    def generate(self, prompt: str, system_prompt: str = "") -> str:
+        text = prompt.lower()
+        if self._is_baseline(system_prompt):
+            return self._mock_baseline(text)
+        return self._mock_agent(text)
 
 
 def get_llm_provider(provider_name: str = None) -> BaseLLMProvider:

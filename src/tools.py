@@ -17,7 +17,23 @@ def calculate_zodiac_compatibility(zodiac_1: str, zodiac_2: str) -> str:
 
         z1 = zodiac_1.lower().strip()
         z2 = zodiac_2.lower().strip()
-        
+
+        VALID_ZODIACS = [
+            "bạch dương", "kim ngưu", "song tử", "cự giải",
+            "sư tử", "xử nữ", "thiên bình", "bọ cạp",
+            "nhân mã", "ma kết", "bảo bình", "song ngư"
+        ]
+
+        # Kiểm tra tính hợp lệ của tên cung hoàng đạo
+        invalid_list = []
+        if not any(v in z1 for v in VALID_ZODIACS):
+            invalid_list.append(zodiac_1)
+        if not any(v in z2 for v in VALID_ZODIACS):
+            invalid_list.append(zodiac_2)
+
+        if invalid_list:
+            return f"Cảnh báo: Tên cung hoàng đạo không hợp lệ hoặc không thuộc 12 cung tiêu chuẩn: {', '.join(invalid_list)}. Vui lòng cung cấp cung hợp lệ (ví dụ: Bảo Bình, Sư Tử...)."
+
         matrix = {
             ("bảo bình", "thiên bình"): "95% - Tuyệt vời! Cả hai cùng hệ Khí, giao tiếp cực kỳ ăn ý.",
             ("kim ngưu", "xử nữ"): "90% - Cực kỳ hợp! Cả hai cùng hệ Đất, thích sự ổn định và chân thành.",

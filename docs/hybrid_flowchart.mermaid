@@ -1,0 +1,52 @@
+flowchart TD
+    START([🚀 Người dùng gửi câu hỏi]) --> CLASSIFY{🧠 Phân loại\ncâu hỏi}
+
+    CLASSIFY -->|Câu hỏi kiến thức\ntổng quát| CHATBOT_PATH
+    CLASSIFY -->|Cần phân tích\ndữ liệu cụ thể| AGENT_PATH
+
+    %% ─── CHATBOT PATH ───────────────────────────────────────────
+    subgraph CHATBOT_PATH ["💬 CHATBOT PATH (Không có Tool)"]
+        direction TB
+        CB1[Gửi câu hỏi\ntới LLM] --> CB2[LLM tổng hợp\nbằng kiến thức nội tại]
+        CB2 --> CB3[Trả lời plain text\ncho người dùng]
+    end
+
+    %% ─── REACT AGENT PATH ───────────────────────────────────────
+    subgraph AGENT_PATH ["🤖 REACT AGENT PATH (Có Tool + Vòng lặp ReAct)"]
+        direction TB
+        A1[Thought:\nSuy luận bước tiếp theo] --> A2{Đã đủ\ndữ liệu?}
+        A2 -->|Chưa đủ| A3[Action:\nGọi Tool phù hợp]
+        A3 --> A4[Tool thực thi\ntrả Observation]
+        A4 --> A5{Còn trong\ngiới hạn bước?}
+        A5 -->|Còn budget| A1
+        A5 -->|Hết MAX_ITERATIONS| GUARDRAIL
+        A2 -->|Đã đủ| FINAL_OK
+    end
+
+    %% ─── TOOL REGISTRY ──────────────────────────────────────────
+    subgraph TOOLS ["🛠️ Tool Registry"]
+        T1["calculate_zodiac_compatibility\n(Tương thích cung hoàng đạo)"]
+        T2["analyze_mbti_match\n(Tương thích MBTI)"]
+        T3["suggest_date_ideas\n(Gợi ý kịch bản hẹn hò)"]
+    end
+
+    A3 --> TOOLS
+    TOOLS --> A4
+
+    %% ─── GUARDRAILS ─────────────────────────────────────────────
+    GUARDRAIL["🛡️ GUARDRAIL TRIGGERED\nSafe Fallback lịch sự"]
+    GUARDRAIL --> END_FAIL([⚠️ Trả lời an toàn:\nChưa đủ dữ liệu để kết luận])
+
+    FINAL_OK[Final Answer:\nTổng hợp từ Observations] --> END_OK([✅ Câu trả lời\ncó căn cứ tool])
+
+    CB3 --> END_CB([✅ Câu trả lời\ntổng quát])
+
+    %% ─── STYLES ─────────────────────────────────────────────────
+    style CHATBOT_PATH fill:#e8f5e9,stroke:#43a047,color:#1b5e20
+    style AGENT_PATH fill:#e3f2fd,stroke:#1e88e5,color:#0d47a1
+    style TOOLS fill:#fff3e0,stroke:#fb8c00,color:#e65100
+    style GUARDRAIL fill:#fce4ec,stroke:#e53935,color:#b71c1c
+    style START fill:#7c4dff,color:#fff,stroke:#7c4dff
+    style END_OK fill:#43a047,color:#fff,stroke:#43a047
+    style END_CB fill:#43a047,color:#fff,stroke:#43a047
+    style END_FAIL fill:#e53935,color:#fff,stroke:#e53935
