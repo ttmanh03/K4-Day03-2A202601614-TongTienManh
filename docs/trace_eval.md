@@ -15,7 +15,17 @@
 
 ---
 
-## 🔍 2. SO SÁNH PHẢN HỒI (TEST CASE #3)
+## 🔍 2. SO SÁNH PHẢN HỒI
+
+### TEST CASE #1
+
+**Câu hỏi**: *"Một mối quan hệ lành mạnh và bền vững cần có những yếu tố nào?"*
+
+### 🤖 Chatbot Baseline:
+* **Phản hồi**: *"Chào bạn! Với vai trò là Cupid Chatbot, tôi rất vui khi được chia sẻ cùng bạn về một câu hỏi tuyệt vời này. Một mối quan hệ lành mạnh và bền vững thực sự là điều ai cũng mong muốn, và thường được xây dựng dựa trên những yếu tố cốt lõi sau đây: (1) Giao tiếp cởi mở và chân thành, (2) Tôn trọng lẫn nhau, (3) Sự tin tưởng, (4) Hỗ trợ và đồng cảm, (5) Cùng chia sẻ giá trị và mục tiêu, (6) Không gian riêng và sự độc lập, (7) Khả năng giải quyết mâu thuẫn một cách xây dựng. Nhớ rằng, mỗi mối quan hệ là duy nhất và cần có thời gian, sự nỗ lực và cam kết từ cả hai phía để phát triển và bền vững theo thời gian."*
+* **Nhận xét**: Chatbot baseline trả lời đúng trọng tâm, văn phong tự nhiên, không cần dùng tool và không có dấu hiệu hallucination. Đây là ví dụ cho thấy với câu hỏi kiến thức chung, chatbot thường đã đáp ứng tốt. Tuy nhiên phản hồi vẫn mang tính tổng quát, chưa thể cá nhân hóa theo hồ sơ hay tình huống cụ thể của từng người dùng.
+
+### TEST CASE #3
 
 **Câu hỏi**: *"Hãy tìm cho tôi một người phù hợp để hẹn hò nghiêm túc và giải thích vì sao."*
 
