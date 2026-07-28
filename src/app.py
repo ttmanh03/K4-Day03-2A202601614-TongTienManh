@@ -43,11 +43,9 @@ def load_test_cases():
 def run_baseline_chatbot(user_query: str, provider):
     """
     Dựng Chatbot gốc (Baseline) không có công cụ.
+    Minh họa hạn chế của chatbot thuần LLM: chỉ dùng kiến thức có sẵn, không gọi tool.
     """
     print(f"\n💬 [CHATBOT BASELINE] Câu hỏi: {user_query}")
-    print(f"⚙️ System Prompt: {CHATBOT_BASELINE_PROMPT.strip()}")
-    
-    # Gọi LLM Provider thực hiện sinh câu trả lời
     response = provider.generate(user_query, system_prompt=CHATBOT_BASELINE_PROMPT)
     print(f"🤖 Chatbot trả lời:\n{response}")
 
@@ -148,16 +146,20 @@ if __name__ == "__main__":
     print(f"✅ Đã tải thành công {len(tests)} Test Cases từ config/test_cases.json\n")
 
     for tc in tests:
-        print(f"\n{'#'*55}")
+        print(f"\n{'='*55}")
         print(f"  TEST CASE {tc['id']}: {tc['category']}")
-        print(f"{'#'*55}")
-        print(f"  📋 Câu hỏi: {tc['question']}")
-        print(f"  🎯 Kỳ vọng: {tc['expected_behavior']}")
+        print(f"{'='*55}")
+        print(f"  📋 Câu hỏi : {tc['question']}")
+        print(f"  🎯 Kỳ vọng : {tc['expected_behavior']}")
 
-        print(f"\n--- DEMO 1: CHATBOT BASELINE ---")
+        print(f"\n{'─'*55}")
+        print(f"  DEMO 1: CHATBOT BASELINE (Không có Tool)")
+        print(f"{'─'*55}")
         run_baseline_chatbot(tc["question"], provider)
 
-        print(f"\n--- DEMO 2: REACT AGENT ---")
+        print(f"\n{'─'*55}")
+        print(f"  DEMO 2: REACT AGENT (Có Tool + Vòng lặp ReAct)")
+        print(f"{'─'*55}")
         run_react_agent(tc["question"], provider)
 
     print(f"\n{'='*55}")

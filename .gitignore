@@ -5,3 +5,11 @@ __pycache__/
 .venv/
 env/
 venv/
+
+# Tài liệu tham khảo thiết kế UI (Google Stitch) - chỉ dùng local, không đưa lên git
+stitch_cupid_agent_ai_analysis/
+stitch_cupid_agent_ai_analysis (*)/
+
+# Frontend
+frontend/node_modules/
+frontend/dist/

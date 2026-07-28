@@ -1,40 +1,44 @@
 flowchart TD
-    A[Người dùng nhập câu hỏi] --> B{Câu hỏi chỉ cần kiến thức chung?}
+    START([🚀 Người dùng gửi câu hỏi]) --> CLASSIFY{🧠 Phân loại\ncâu hỏi}
 
-    B -->|Có| C[Chatbot Baseline]
-    C --> C1[Trả lời bằng kiến thức tổng quát]
-    C1 --> C2[Không gọi tool]
-    C2 --> Z[Kết thúc]
+    CLASSIFY -->|Câu hỏi kiến thức\ntổng quát| CHATBOT_PATH
+    CLASSIFY -->|Cần phân tích\ndữ liệu cụ thể| AGENT_PATH
 
-    B -->|Không| D{Có cần phân tích cụ thể\nhoặc gọi tool không?}
-
-    D -->|Có| E[ReAct Agent]
-    E --> F[Thought: xác định cần làm gì]
-    F --> G[Action: gọi tool phù hợp]
-    G --> H[Observation: nhận kết quả từ tool]
-
-    H --> I{Đã đủ dữ liệu để trả lời chưa?}
-    I -->|Chưa| F
-    I -->|Rồi| J[Final Answer: kết luận + giải thích]
-    J --> Z
-
-    G --> K{Tool lỗi / input vô lý /\nyêu cầu ngoài phạm vi?}
-    K -->|Có| L[Safe Fallback hoặc từ chối lịch sự]
-    L --> Z
-
-    subgraph Chatbot_Path [Chatbot Path]
-        C
-        C1
-        C2
+    %% ─── CHATBOT PATH ───────────────────────────────────────────
+    subgraph CHATBOT_PATH ["💬 CHATBOT PATH (Không có Tool)"]
+        direction TB
+        CB1[Gửi câu hỏi\ntới LLM] --> CB2[LLM tổng hợp\nbằng kiến thức nội tại]
+        CB2 --> CB3[Trả lời plain text\ncho người dùng]
     end
 
-    subgraph ReAct_Path [ReAct Agent Path]
-        E
-        F
-        G
-        H
-        I
-        J
-        K
-        L
+    %% ─── REACT AGENT PATH ───────────────────────────────────────
+    subgraph AGENT_PATH ["🤖 REACT AGENT PATH (Có Tool + Vòng lặp ReAct)"]
+        direction TB
+        A1[Thought:\nSuy luận bước tiếp theo] --> A2{Đã đủ\ndữ liệu?}
+        A2 -->|Chưa đủ| A3[Action:\nGọi Tool phù hợp]
+        A3 --> A4[Tool thực thi\ntrả Observation]
+        A4 --> A5{Còn trong\ngiới hạn bước?}
+        A5 -->|Còn budget| A1
+        A5 -->|Hết MAX_ITERATIONS| GUARDRAIL
+        A2 -->|Đã đủ| FINAL_OK
     end
+
+    %% ─── TOOL REGISTRY ──────────────────────────────────────────
+    subgraph TOOLS ["🛠️ Tool Registry"]
+        T1["calculate_zodiac_compatibility\n(Tương thích cung hoàng đạo)"]
+        T2["analyze_mbti_match\n(Tương thích MBTI)"]
+        T3["suggest_date_ideas\n(Gợi ý kịch bản hẹn hò)"]
+    end
+
+    A3 --> TOOLS
+    TOOLS --> A4
+
+    %% ─── GUARDRAILS ─────────────────────────────────────────────
+    GUARDRAIL["🛡️ GUARDRAIL TRIGGERED\nSafe Fallback lịch sự"]
+    GUARDRAIL --> END_FAIL([⚠️ Trả lời an toàn:\nChưa đủ dữ liệu để kết luận])
+
+    FINAL_OK[Final Answer:\nTổng hợp từ Observations] --> END_OK([✅ Câu trả lời\ncó căn cứ tool])
+
+    CB3 --> END_CB([✅ Câu trả lời\ntổng quát])
+
+    
