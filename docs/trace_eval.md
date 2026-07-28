@@ -7,26 +7,31 @@
 
 | Tiêu chí | Điểm (1-5) | Lý do đánh giá |
 | :--- | :---: | :--- |
-| 🧠 **Multi-step Reasoning** | `4/5` | Cần suy luận từ tra cứu thời tiết đến chọn trang phục. |
-| 🛠️ **Tool Interaction** | `5/5` | Cần tra cứu dữ liệu thời gian thực qua API thời tiết/chuyến bay. |
-| 🔀 **Dynamic Decision** | `4/5` | Kết quả bước trước quyết định hành động bước sau. |
-| ⏳ **Long Horizon** | `3/5` | Quy trình gồm 2-3 bước xử lý ngắn. |
-| **TỔNG ĐIỂM FIT** | **16/20** | **KẾT LUẬN: BÀI TOÁN RẤT NÊN DÙNG REACT AGENT!** |
+| 🧠 **Multi-step Reasoning** | `5/5` | Cần đọc hồ sơ người dùng, so sánh nhiều yếu tố tương thích và tổng hợp thành nhận xét cuối cùng. |
+| 🛠️ **Tool Interaction** | `5/5` | Agent cần gọi tool để lấy hồ sơ, tìm ứng viên phù hợp và phân tích độ tương thích thay vì chỉ trả lời chung chung. |
+| 🔀 **Dynamic Decision** | `4/5` | Kết quả mỗi bước như bộ lọc hồ sơ hay điểm tương thích sẽ quyết định bước tiếp theo và câu trả lời cuối. |
+| ⏳ **Long Horizon** | `3/5` | Luồng xử lý thường gồm 2-4 bước, đủ để cần agent nhưng chưa phải chuỗi tác vụ rất dài. |
+| **TỔNG ĐIỂM FIT** | **17/20** | **KẾT LUẬN: BÀI TOÁN RẤT PHÙ HỢP ĐỂ DÙNG REACT AGENT.** |
 
 ---
 
 ## 🔍 2. SO SÁNH PHẢN HỒI (TEST CASE #3)
 
-**Câu hỏi**: *"Thời tiết ở Hà Nội hôm nay thế nào và tôi nên mặc gì đi chơi?"*
+**Câu hỏi**: *"Hãy tìm cho tôi một người phù hợp để hẹn hò nghiêm túc và giải thích vì sao."*
 
 ### 🤖 Chatbot Baseline:
-* **Phản hồi**: *"Tôi không có truy cập Internet thời gian thực nên không biết thời tiết hôm nay ở Hà Nội."*
-* **Nhận xét**: An toàn nhưng không giải quyết được nhu cầu thực tế của người dùng.
+* **Phản hồi**: *"Bạn nên tìm người có cùng giá trị sống, cùng mục tiêu tình cảm và biết lắng nghe."*
+* **Nhận xét**: Câu trả lời đúng ở mức khái quát nhưng chưa dùng dữ liệu hồ sơ cụ thể nên chưa thực sự làm nhiệm vụ ghép đôi.
 
 ### 🧠 ReAct Agent:
-* **Thought 1**: Cần tra cứu thời tiết Hà Nội.
-* **Action 1**: `get_weather['Hà Nội']`
-* **Observation 1**: `Thời tiết Hà Nội: 28°C, Nắng nhẹ, Độ ẩm 65%.`
-* **Thought 2**: Đã có thông tin 28°C nắng nhẹ, đưa ra lời khuyên trang phục.
-* **Final Answer**: *"Thời tiết Hà Nội hôm nay 28°C, nắng nhẹ. Bạn nên mặc quần áo thoáng mát!"*
-* **Nhận xét**: Hoàn thành xuất sắc nhiệm vụ nhờ sự kết hợp giữa suy luận và công cụ.
+* **Thought 1**: Cần lấy hồ sơ của người dùng để biết sở thích và mục tiêu hẹn hò.
+* **Action 1**: `get_user_profile['user_01']`
+* **Observation 1**: `Nữ, 24 tuổi, thích đọc sách, chạy bộ, du lịch ngắn ngày; mục tiêu là mối quan hệ nghiêm túc.`
+* **Thought 2**: Cần tìm danh sách ứng viên phù hợp sơ bộ theo độ tuổi, mục tiêu và sở thích.
+* **Action 2**: `search_candidate_profiles['user_01']`
+* **Observation 2**: `Tìm thấy 3 ứng viên phù hợp sơ bộ: user_07, user_12, user_15.`
+* **Thought 3**: Cần phân tích độ tương thích với ứng viên nổi bật nhất để có giải thích rõ ràng.
+* **Action 3**: `analyze_compatibility['user_01', 'user_07']`
+* **Observation 3**: `Điểm tương thích 84/100. Cùng thích vận động, đều muốn mối quan hệ nghiêm túc, khác biệt nhỏ về cách dành cuối tuần.`
+* **Final Answer**: *"Ứng viên phù hợp nhất hiện tại là user_07 với điểm tương thích 84/100. Hai bạn có chung mục tiêu hẹn hò nghiêm túc, cùng thích hoạt động ngoài trời và có lối sống khá tương đồng. Điểm cần lưu ý là thói quen cuối tuần hơi khác nhau, nhưng đây chưa phải xung đột lớn."*
+* **Nhận xét**: Agent sử dụng dữ liệu hồ sơ thật trong hệ thống, có chuỗi suy luận rõ ràng và đưa ra khuyến nghị cụ thể hơn nhiều so với chatbot thường.
