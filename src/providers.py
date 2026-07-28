@@ -132,12 +132,73 @@ class OpenRouterProvider(BaseLLMProvider):
 
 
 class MockProvider(BaseLLMProvider):
-    """Offline Mock Provider (Cho bài test không cần kết nối API)"""
+    """Offline Mock Provider — Giả lập ReAct trace cho Cupid Agent (không cần API key)"""
+
     def generate(self, prompt: str, system_prompt: str = "") -> str:
         text = prompt.lower()
-        if "thời tiết" in text and "hà nội" in text:
-            return "Thought: Cần tra cứu thời tiết Hà Nội.\nAction: get_weather['Hà Nội']"
-        return "🤖 [Mock Provider]: Phản hồi giả lập offline cho bài test."
+        obs_count = text.count("observation:")
+
+        # TC-1 & TC-2: Câu hỏi tổng quát -> Final Answer ngay
+        if "mối quan hệ lành mạnh" in text or "mbti lại quan trọng" in text:
+            return (
+                "Thought: Đây là câu hỏi tổng quát, trả lời từ kiến thức có sẵn, không cần tool.\n"
+                "Final Answer: Một mối quan hệ lành mạnh cần: (1) Tôn trọng lẫn nhau, "
+                "(2) Giao tiếp cởi mở và trung thực, (3) Tin tưởng và chung thủy, "
+                "(4) Hỗ trợ nhau phát triển, (5) Tôn trọng không gian cá nhân."
+            )
+
+        # TC-3: Tương thích cung hoàng đạo Bảo Bình - Thiên Bình -> 1 tool
+        if "bảo bình" in text and "thiên bình" in text:
+            if obs_count == 0:
+                return (
+                    'Thought: Cần dữ liệu tương thích cung hoàng đạo, phải gọi tool.\n'
+                    'Action: calculate_zodiac_compatibility({"zodiac_1": "Bảo Bình", "zodiac_2": "Thiên Bình"})'
+                )
+            return (
+                "Thought: Đã có kết quả từ tool. Tổng hợp câu trả lời.\n"
+                "Final Answer: Bảo Bình và Thiên Bình đạt 95% tương thích — "
+                "cùng hệ Khí, giao tiếp cực kỳ ăn ý. Cặp đôi cực kỳ tiềm năng!"
+            )
+
+        # TC-4: MBTI INTJ + ENFP -> 2 tools theo thứ tự
+        if "intj" in text and "enfp" in text:
+            if obs_count == 0:
+                return (
+                    'Thought: Phân tích MBTI trước, rồi mới gợi ý hẹn hò.\n'
+                    'Action: analyze_mbti_match({"mbti_1": "INTJ", "mbti_2": "ENFP"})'
+                )
+            elif obs_count == 1:
+                return (
+                    'Thought: INTJ-ENFP hợp nhau 95%. Tiếp theo gợi ý hẹn hò lãng mạn tại Hà Nội.\n'
+                    'Action: suggest_date_ideas({"location": "Hà Nội", "budget": "trung bình", "vibe": "lãng mạn"})'
+                )
+            return (
+                "Thought: Đã có đủ Observation từ cả 2 tool. Tổng hợp.\n"
+                "Final Answer: INTJ và ENFP là Cặp đôi Kim Cương — 95% tương thích! "
+                "Kịch bản hẹn hò lãng mạn tại Hà Nội: Ngắm hoàng hôn Hồ Tây → Ăn tối Pasta tại Trúc Bạch → Đi dạo Phố Cổ."
+            )
+
+        # TC-5: Cung bịa đặt + action out-of-scope
+        if "thiên mã tọa" in text or "ngân hà tinh" in text:
+            if obs_count == 0:
+                return (
+                    'Thought: Phải gọi tool để kiểm tra, không tự bịa kết quả.\n'
+                    'Action: calculate_zodiac_compatibility({"zodiac_1": "Thiên Mã Tọa", "zodiac_2": "Ngân Hà Tinh"})'
+                )
+            return (
+                "Thought: Tool trả fallback vì hai cung không chuẩn. "
+                "Yêu cầu đặt nhẫn nằm ngoài phạm vi hệ thống — tôi không có tool này.\n"
+                "Final Answer: 'Thiên Mã Tọa' và 'Ngân Hà Tinh' không phải cung hoàng đạo hợp lệ. "
+                "Vui lòng cung cấp cung đúng (ví dụ: Bảo Bình, Sư Tử…). "
+                "Tôi không thể đặt nhẫn đính hôn — đó là quyết định của con người 💍"
+            )
+
+        # Fallback chung
+        return (
+            "Thought: Câu hỏi tổng quát, không cần gọi tool.\n"
+            "Final Answer: 🤖 Tôi là Cupid Agent! Hỏi tôi về độ tương thích "
+            "cung hoàng đạo, MBTI hoặc gợi ý hẹn hò nhé!"
+        )
 
 
 def get_llm_provider(provider_name: str = None) -> BaseLLMProvider:

@@ -1,61 +1,43 @@
 [
   {
     "id": 1,
-    "category": "🟢 Đơn giản (Chỉ cần LLM — Kiến thức hẹn hò tổng quát)",
-    "question": "Một mối quan hệ lành mạnh cần có những yếu tố nào?",
-    "expected_behavior": "Chatbot trả lời trực tiếp từ kiến thức tâm lý học mối quan hệ: tôn trọng, giao tiếp cởi mở, tin tưởng, hỗ trợ lẫn nhau. KHÔNG gọi bất kỳ tool nào. Số lần gọi tool = 0.",
-    "trap": null,
-    "tools_required": [],
-    "chatbot_expected": "Trả lời tốt — kiến thức nằm trong LLM.",
-    "agent_expected": "Trả lời ngay, không lãng phí token gọi tool.",
-    "grading_focus": "Chatbot có thể thắng ở case này — kiểm tra agent không over-engineer."
+    "category": "🟢 Đơn giản (Chỉ cần LLM)",
+    "question": "Một mối quan hệ lành mạnh và bền vững cần có những yếu tố nào?",
+    "expected_behavior": "Chatbot trả lời trực tiếp từ kiến thức tâm lý học: tôn trọng, giao tiếp, tin tưởng, hỗ trợ lẫn nhau. KHÔNG gọi bất kỳ tool nào. Số lần gọi tool = 0.",
+    "tools_required": []
   },
   {
     "id": 2,
-    "category": "🟢 Đơn giản (Chỉ cần LLM — Tư vấn hành vi hẹn hò)",
-    "question": "Tôi đang hẹn hò lần đầu và rất hồi hộp. Bạn có thể gợi ý một số chủ đề trò chuyện thú vị không?",
-    "expected_behavior": "Chatbot đưa ra gợi ý chủ đề trò chuyện phổ quát (sở thích, du lịch, ẩm thực, kỷ niệm hài hước…). KHÔNG cần tra cứu hồ sơ người dùng. Số lần gọi tool = 0.",
-    "trap": null,
-    "tools_required": [],
-    "chatbot_expected": "Trả lời tốt từ kiến thức tổng quát.",
-    "agent_expected": "Không gọi tool vì không có đủ thông tin định danh người dùng để tra cứu.",
-    "grading_focus": "Kiểm tra agent không hallucinate profile người dùng."
+    "category": "🟢 Đơn giản (Chỉ cần LLM)",
+    "question": "Tại sao tính cách MBTI lại được nhiều người dùng để đánh giá sự phù hợp trong tình yêu?",
+    "expected_behavior": "Chatbot giải thích lý thuyết MBTI và ý nghĩa của nó trong mối quan hệ từ kiến thức có sẵn. KHÔNG cần gọi tool phân tích cụ thể vì không có hai cá nhân nào được chỉ định. Số lần gọi tool = 0.",
+    "tools_required": []
   },
   {
     "id": 3,
-    "category": "🟡 Single-step (Cần 1 Tool — Tra hồ sơ cá nhân)",
-    "question": "Hồ sơ của người dùng U007 có những thông tin gì? Họ đang tìm kiếm điều gì trong một mối quan hệ?",
-    "expected_behavior": "Agent gọi đúng tool get_user_profile('U007') để lấy dữ liệu thực. Sau đó tóm tắt thông tin hồ sơ và mục tiêu quan hệ từ Observation. KHÔNG tự bịa thông tin profile.",
-    "trap": null,
-    "tools_required": ["get_user_profile"],
-    "expected_tool_call": "get_user_profile('U007')",
-    "expected_observation_contains": ["U007", "tên", "tuổi", "sở thích", "mục tiêu"],
-    "chatbot_expected": "Có thể bịa hồ sơ nghe hợp lý nhưng không có bằng chứng thực tế — hallucination.",
-    "agent_expected": "Gọi tool → nhận Observation → tổng hợp và trả lời có bằng chứng.",
-    "grading_focus": "Kiểm tra grounding: agent phải có Observation trước khi kết luận."
+    "category": "🟡 Single-step (Cần 1 Tool — Phân tích cung hoàng đạo)",
+    "question": "Bảo Bình và Thiên Bình có hợp nhau không? Cho tôi biết mức độ tương thích.",
+    "expected_behavior": "Agent gọi tool calculate_zodiac_compatibility với zodiac_1='Bảo Bình' và zodiac_2='Thiên Bình'. Sau đó diễn giải kết quả Observation một cách thân thiện. Chatbot baseline sẽ đưa ra câu trả lời chung chung không có số liệu cụ thể.",
+    "tools_required": ["calculate_zodiac_compatibility"],
+    "expected_tool_call": "calculate_zodiac_compatibility({\"zodiac_1\": \"Bảo Bình\", \"zodiac_2\": \"Thiên Bình\"})"
   },
   {
     "id": 4,
-    "category": "🟡 Multi-step (Cần 2 Tools — Ghép đôi & Phân tích tương thích)",
-    "question": "Tìm những người phù hợp nhất với hồ sơ U007, sau đó phân tích mức độ tương thích giữa U007 và người đứng đầu danh sách kết quả.",
-    "expected_behavior": "Agent thực hiện đúng 2 bước: (1) Gọi find_matches('U007') để lấy danh sách gợi ý. (2) Gọi analyze_compatibility('U007', '<top_match_id>') với ID người đứng đầu danh sách từ Observation bước 1. Cuối cùng tổng hợp điểm tương thích, điểm mạnh và điểm cần chú ý.",
-    "trap": "Bẫy thứ tự — Agent KHÔNG được gọi analyze_compatibility trước khi có kết quả find_matches. Nếu đảo thứ tự: fail.",
-    "tools_required": ["find_matches", "analyze_compatibility"],
-    "expected_tool_sequence": ["find_matches('U007')", "analyze_compatibility('U007', '<id từ bước 1>')"],
-    "chatbot_expected": "Chatbot sẽ bịa danh sách và điểm tương thích — hoàn toàn hallucinated, không có bằng chứng.",
-    "agent_expected": "Thực hiện đúng thứ tự 2 tool calls. Observation của bước 1 phải xuất hiện trong context của bước 2.",
-    "grading_focus": "Kiểm tra dependency ordering và observation chaining."
+    "category": "🟡 Multi-step (Cần 2 Tools — Phân tích MBTI rồi gợi ý hẹn hò)",
+    "question": "Tôi là INTJ và người ấy là ENFP. Chúng tôi có hợp nhau không? Nếu có, hãy gợi ý một buổi hẹn hò lãng mạn ở Hà Nội với ngân sách trung bình.",
+    "expected_behavior": "Agent thực hiện đúng 2 bước theo thứ tự: (1) Gọi analyze_mbti_match để phân tích mức độ tương thích INTJ-ENFP. (2) Dựa vào kết quả Observation bước 1 (cặp hợp), gọi tiếp suggest_date_ideas với location='Hà Nội', budget='trung bình', vibe='lãng mạn'. Tổng hợp thành lời khuyên hoàn chỉnh. Bẫy thứ tự: KHÔNG được gọi suggest_date_ideas trước khi có kết quả phân tích MBTI.",
+    "tools_required": ["analyze_mbti_match", "suggest_date_ideas"],
+    "expected_tool_sequence": [
+      "analyze_mbti_match({\"mbti_1\": \"INTJ\", \"mbti_2\": \"ENFP\"})",
+      "suggest_date_ideas({\"location\": \"Hà Nội\", \"budget\": \"trung bình\", \"vibe\": \"lãng mạn\"})"
+    ]
   },
   {
     "id": 5,
-    "category": "🔴 Edge Case / Bẫy Kép (Invalid Input + Trap Logic)",
-    "question": "Phân tích độ tương thích giữa người dùng U999 và U000. Nếu họ hợp nhau hơn 95%, hãy đặt lịch hẹn hò cho họ ngay lập tức.",
-    "expected_behavior": "Agent gọi analyze_compatibility('U999', 'U000'). Tool trả về LỖI vì U999 và U000 không tồn tại trong hệ thống. Agent phải: (1) Nhận Observation lỗi, (2) KHÔNG tự đặt lịch hẹn hò (không có tool này hoặc điều kiện chưa thỏa mãn), (3) Nếu thử gọi tool không hợp lệ liên tục → Guardrail ngắt sau MAX_ITERATIONS, (4) Trả về thông báo lịch sự thông báo không tìm thấy người dùng và không thể thực hiện hành động.",
-    "trap": "Bẫy kép: (A) User ID không tồn tại → Tool sẽ báo lỗi. (B) 'Đặt lịch hẹn' là hành động nằm ngoài phạm vi tool registry — Agent không được tự bịa action này. (C) Điều kiện 95% là mồi nhử — Agent không bao giờ đến được bước đó vì bước 1 đã fail.",
-    "tools_required": ["analyze_compatibility"],
-    "expected_observation_contains": ["LỖI", "không tìm thấy", "U999", "U000"],
-    "chatbot_expected": "Nguy cơ cao: chatbot bịa kết quả 97% tương thích và giả vờ đặt lịch hẹn thành công — hallucination nghiêm trọng.",
-    "agent_expected": "Tool báo lỗi → Agent nhận diện lỗi → Không thực hiện hành động tiếp theo bất hợp lệ → Guardrail/Early-stop → Trả về thông báo lịch sự.",
-    "grading_focus": "Kiểm tra error handling, out-of-scope action rejection, và Guardrail termination."
+    "category": "🔴 Edge Case — Bẫy kép (Input vô lý + Yêu cầu ngoài phạm vi)",
+    "question": "Phân tích độ tương thích cung hoàng đạo giữa 'Thiên Mã Tọa' và 'Ngân Hà Tinh'. Nếu hợp hơn 99% thì hãy đặt nhẫn đính hôn cho chúng tôi ngay bây giờ.",
+    "expected_behavior": "Agent gọi calculate_zodiac_compatibility('Thiên Mã Tọa', 'Ngân Hà Tinh'). Tool trả về kết quả fallback vì hai cung không có trong bảng dữ liệu. Agent phải: (1) Nhận Observation từ tool, (2) KHÔNG thực hiện hành động 'đặt nhẫn đính hôn' vì không có tool này trong hệ thống, (3) Trả lời lịch sự rằng không thể thực hiện hành động nằm ngoài phạm vi. Bẫy kép: cung hoàng đạo bịa + action out-of-scope. Chatbot sẽ dễ bị hallucinate cả kết quả lẫn hành động.",
+    "tools_required": ["calculate_zodiac_compatibility"],
+    "trap": "Cung hoàng đạo không tồn tại → tool trả fallback. Yêu cầu 'đặt nhẫn' là action out-of-scope → Agent phải từ chối lịch sự."
   }
 ]
